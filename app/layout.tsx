@@ -1,0 +1,42 @@
+import type { Metadata, Viewport } from "next";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
+import { ConvexClientProvider } from "@/components/providers/convex-client-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { Toaster } from "sonner";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: "BlockSense — Smart Community OS",
+  description: "Smart community operating system for gated residential societies",
+  manifest: "/manifest.json",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "BlockSense" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0F6E56",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange={false}
+            storageKey="blocksense-theme"
+          >
+            <ConvexClientProvider>
+              {children}
+              <Toaster position="top-right" richColors closeButton />
+            </ConvexClientProvider>
+          </ThemeProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
+  );
+}
