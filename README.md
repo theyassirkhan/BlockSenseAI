@@ -5,15 +5,13 @@
 # 🏢 BlockSenseAI
 ### The Smart Community Operating System
 
-**Real-time utility monitoring, resident management, and automated intelligence for modern gated communities.**
+**A high-performance, real-time ecosystem designed for modern gated residential societies. Monitor utilities, manage residents, and predict resource needs with zero-latency synchronization.**
 
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![Convex](https://img.shields.io/badge/Convex-Realtime%20DB-EE4B2B?style=flat-square)](https://convex.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-0F6E56?style=flat-square)](LICENSE)
+[![Build Status](https://img.shields.io/badge/Status-Live-0F6E56?style=for-the-badge)](https://github.com/theyassirkhan/BlockSenseAI)
+[![Stack](https://img.shields.io/badge/Stack-Apex-blue?style=for-the-badge)](https://convex.dev/)
+[![License](https://img.shields.io/badge/License-MIT-gray?style=for-the-badge)](LICENSE)
 
-[Exploration](#overview) • [Live Features](#live-features) • [Architecture](#architecture) • [Getting Started](#getting-started)
+[Overview](#-overview) • [Core Architecture](#-core-architecture) • [Portal Experiences](#-the-three-portal-experience) • [Technical Specs](#-technical-specifications) • [Getting Started](#-getting-started)
 
 </div>
 
@@ -21,169 +19,161 @@
 
 ## 🌟 Overview
 
-**BlockSenseAI** is a robust, full-stack community management platform designed to solve the complexities of gated residential societies. It bridges the gap between residents and management through a "Single Source of Truth" powered by **real-time WebSocket synchronization**.
+BlockSenseAI is not just a management app; it's an **Operating System** for communities. It addresses the fragmented nature of residential management by providing a single, real-time "Source of Truth" for resource consumption, security, and administrative operations.
 
-### 🏢 One Platform, Three Experiences
-- **🛡️ Platform Admin:** Cross-society oversight, billing, and global broadcasts.
-- **🏗️ RWA Dashboard:** Full CRUD operations for society-level utility, staff, and resident management.
-- **🏡 Resident Portal:** Real-time utility tracking, dues payment, and service request submission.
+### 🚀 Why BlockSenseAI?
+- **Zero-Latency Sync**: Powered by Convex, every reading update reflects instantly across all portals.
+- **Predictive Intelligence**: AI-lite models estimate when your water tanks will run dry or when the DG unit needs diesel.
+- **Integrated Communications**: Direct-to-WhatsApp alerts and automated weekly digests.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Core Architecture
 
-BlockSenseAI leverages a modern serverless architecture where the frontend and backend are inextricably linked via real-time data streams.
+The system is built on a "Real-time Serverless" paradigm, ensuring scalability without managing traditional infrastructure.
 
 ### 🌐 High-Level Flow
 ```mermaid
 graph TD
     User((User))
-    NextJS[Next.js App Router]
+    NextJS[Next.js 14 App Router]
     ConvexDB[(Convex Real-time DB)]
     Auth[Convex Auth / OTP]
-    External[External APIs]
+    Logic[Serverless Functions]
+    External[Integrated APIs]
     
     User <--> NextJS
-    NextJS <-->|Real-time Sync| ConvexDB
-    ConvexDB <--> Auth
-    ConvexDB -->|Actions/Crons| External
+    NextJS <-->|WebSocket| ConvexDB
+    ConvexDB <--> Logic
+    Logic <--> Auth
+    Logic -->|Trigger| External
     External -.->|WhatsApp/Email| User
 ```
 
-### 🔗 Tech Stack Connectivity
+### 🛠️ Tech Stack & Connectivity
+| Layer | Tech | Role |
+| :--- | :--- | :--- |
+| **Frontend** | ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=next.js&logoColor=white) | App Router, Server Components, Hooks |
+| **Backend** | ![Convex](https://img.shields.io/badge/Convex-FF4C4C?style=flat-square&logo=convex&logoColor=white) | Real-time DB, Serverless Functions, Crons |
+| **Interface** | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white) | JIT Styling, Dynamic Dark Mode |
+| **Components** | ![Shadcn UI](https://img.shields.io/badge/Shadcn%20UI-000000?style=flat-square&logo=shadcnui&logoColor=white) | Radix UI Primitives, High-quality UI |
+| **Analytics** | ![Recharts](https://img.shields.io/badge/Recharts-22B5BF?style=flat-square&logo=recharts&logoColor=white) | Consumption trends, Health Score visualization |
+| **Auth** | ![Clerk](https://img.shields.io/badge/Convex_Auth-FF4C4C?style=flat-square) | OTP Email/WhatsApp, Anonymous, OAuth |
+
+---
+
+## 🎭 The Three-Portal Experience
+
+BlockSenseAI adapts its interface based on user roles, ensuring complex operations remain simple for the end-user.
+
+### 🛡️ Platform Admin Dashboard (`/admin`)
+Designed for the BlockSense team to manage multiple societies.
+- **Global Overview**: KPI matrix for all societies (MRR, Health, Active Users).
+- **Society Management**: Provisioning, billing, and subscription plan (Basic/Pro/Enterprise) control.
+- **Ticketing**: SLA-tracked support system for society RWA requests.
+
+### 🏗️ RWA Committee Dashboard (`/dashboard`)
+The "War Room" for society administrators and operational staff.
+- **Utility Command Center**: Real-time gauges for Water, Power, Gas, and Sewage.
+- **Workforce Management**: Staff shifts, attendance tracking, and vendor directory.
+- **Financial Ledger**: Automated maintenance dues generation and payment confirmation workflow.
+
+### 🏡 Resident Portal (`/resident`)
+A lightweight, mobile-first experience for society members.
+- **Personal Monitoring**: View block-wise tank levels and power status.
+- **Self-Service**: Submit service requests, view notices, and pay maintenance dues.
+- **Identity Control**: Update notification preferences (WhatsApp/In-app).
+
+---
+
+## 💧 Resource Intelligence
+
+The platform doesn't just display data; it **predicts resource lifespan**.
+
+### 📉 Prediction Logic Flow
 ```mermaid
-graph LR
-    subgraph Frontend
-        Next[Next.js 14]
-        Tailwind[Tailwind CSS]
-        UI[Shadcn/UI]
-        Charts[Recharts]
-    end
+sequenceDiagram
+    participant Staff
+    participant DB as Convex DB
+    participant Engine as Prediction Engine
+    participant UI as Portals
     
-    subgraph Backend
-        Convex[Convex Serverless]
-        Schema[Strict Schema]
-        Functions[Queries/Mutations]
-    end
-    
-    subgraph Infrastructure
-        Auth[Convex Auth]
-        Notify[MSG91 / Resend]
-    end
-    
-    Next --- Convex
-    Tailwind --- UI
-    UI --- Next
-    Charts --- Next
-    Convex --- Schema
-    Convex --- Auth
-    Convex --- Notify
+    Staff->>DB: Logs Water Reading (kl)
+    DB->>Engine: Trigger Analysis
+    Engine->>Engine: Calc 7-day Rolling Avg
+    Engine->>Engine: (Capacity - Used) / Avg Use
+    Engine->>DB: Store Prediction Data
+    DB-->>UI: Real-time Update HUD
+    Note over Engine: If < 2 Days: Trigger WhatsApp Alert
 ```
 
 ---
 
-## ✨ Live Features
+## 📊 Database Specifications
 
-| Category | Feature | Benefit |
-| :--- | :--- | :--- |
-| **💧 Water** | Tank level monitoring & Tanker Prediction | Never run out of water again. |
-| **⚡ Power** | DG unit diesel tracking & Runtime prediction | Automated refuel alerts. |
-| **🔥 Gas** | Pressure monitoring & supply status | Real-time safety and usage tracking. |
-| **🗑️ Waste** | Segregation compliance & Leaderboards | gamified society sustainability. |
-| **📢 Alerts** | Real-time multi-channel notifications | Instant WhatsApp/SMS/In-app alerts. |
-| **💳 Payments** | Maintenance dues & Ledger tracking | Transparent accounts for every resident. |
-| **🛠️ Service** | Automated ticketing & Rating system | Resolve resident issues faster. |
+The backend maintains a strict schema with 30+ tables to ensure data integrity across multi-tenant environments.
 
----
-
-## 🛠️ Tech Stack
-
-BlockSenseAI is built with the "Apex Stack" for speed, safety, and scalability:
-
-- **Frontend:** Next.js 14 (App Router), React 18, TypeScript.
-- **Styling:** Tailwind CSS, Radix UI, Shadcn/UI (Aesthetic Excellence).
-- **Backend:** Convex (Real-time DB, Serverless Functions, Scheduling).
-- **Auth:** Convex Auth (OTP Email/SMS, Anonymous, Google OAuth).
-- **Automation:** 
-    - **MSG91:** WhatsApp Business API for critical alerts.
-    - **Resend:** Transactional email for OTPs and notifications.
-- **Analytics:** Recharts for sleek consumption and health score trends.
+### 📈 Core Schema Overview
+```mermaid
+erDiagram
+    SOCIETY ||--o{ BLOCK : contains
+    BLOCK ||--o{ USER : resides
+    BLOCK ||--o{ WATER_TANK : monitors
+    BLOCK ||--o{ DG_UNIT : tracks
+    USER ||--o{ READING : logs
+    USER ||--o{ SERVICE_REQUEST : submits
+    SOCIETY ||--o{ ALERT : triggers
+    SOCIETY ||--o{ PAYMENT : processes
+```
 
 ---
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-- Node.js 18+
-- Convex Account
+- **Node.js** (v18+)
+- **Convex Account** ([convex.dev](https://convex.dev))
+- **Environment Keys**: MSG91 (WhatsApp), Resend (Email).
 
-### 2. Quick Setup
+### 2. Installation
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/theyassirkhan/BlockSenseAI.git
 cd BlockSenseAI
 
 # Install dependencies
 npm install
 
-# Connect to Convex (Frontend + Backend)
+# Initialize Convex Backend
 npx convex dev
 ```
 
-### 3. Environment Configuration
-Ensure your `.env.local` contains:
-```env
+### 3. Environment Variables
+Create a `.env.local` file:
+```bash
 NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
+
+# Integrated Services
 AUTH_RESEND_KEY=re_xxxxxxxxxxxx
 MSG91_AUTH_KEY=your_msg91_key
+RESEND_API_KEY=re_xxxxxxxxxxxx
 ```
 
 ---
 
-## 📁 project Structure
+## 🤝 Collaborations & Credits
 
-```text
-BlockSenseAI/
-├── app/                  # Next.js App Router (Admin/RWA/Resident)
-├── component/            # Shared shadcn/ui library
-├── convex/               # Backend Logic (26 Tables, Crons, Predictions)
-├── hooks/                # Custom React hooks for global state
-├── lib/                  # Utility functions & formatting
-└── public/               # Asset management
-```
+Contributions are welcome to make community management smarter and safer for everyone.
 
----
-
-## 📈 Prediction Engine
-
-BlockSenseAI doesn't just monitor; it **foresees**.
-Using rolling average consumption models, the platform predicts:
-- **Water Runout Date:** Based on current tank levels and 7-day average usage.
-- **Diesel Depletion:** Estimated hours left during power outages.
-
----
-
-## 🤝 Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📜 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
+**Core Developed by:**
+### 🤵 [Yassir Khan](https://github.com/theyassirkhan)
+*Full-stack Engineer & Architect*
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by [Yassir Khan](https://github.com/theyassirkhan)**
+**Built with ❤️ for a Smarter Future**
 
 [Report Bug](https://github.com/theyassirkhan/BlockSenseAI/issues) • [Request Feature](https://github.com/theyassirkhan/BlockSenseAI/issues)
 
