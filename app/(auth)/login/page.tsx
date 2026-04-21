@@ -71,7 +71,7 @@ export default function LoginPage() {
     try {
       const data = await callAuth({ provider: "resend-otp", params: { email, code } });
       if (data.tokens) {
-        window.location.href = "/dashboard";
+        window.location.href = "/onboarding";
       } else {
         throw new Error("Invalid or expired code.");
       }
