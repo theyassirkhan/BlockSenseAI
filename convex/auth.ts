@@ -9,11 +9,7 @@ const resendOtpProvider = {
   from: "BlockSense <onboarding@resend.dev>",
   maxAge: 60 * 60,
   options: {},
-  authorize: async (params: any, account: any) => {
-    if (typeof params?.email !== "string") throw new Error("Token verification requires email.");
-    if (account?.providerAccountId !== params.email) throw new Error("Short verification code requires a matching email.");
-  },
-  sendVerificationRequest: async ({ identifier: email, token }: { identifier: string; token: string }) => {
+  sendVerificationRequest: async ({ identifier: email, token, provider }: any) => {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.AUTH_RESEND_KEY);
     const { error } = await resend.emails.send({

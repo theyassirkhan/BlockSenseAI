@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, ShieldCheck, Users, Home } from "lucide-react";
+import { useAuthActions } from "@convex-dev/auth/react";
 
 const emailSchema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -19,18 +20,8 @@ const otpSchema = z.object({
 type EmailForm = z.infer<typeof emailSchema>;
 type OtpForm = z.infer<typeof otpSchema>;
 
-async function callAuth(args: Record<string, unknown>) {
-  const res = await fetch("/api/auth", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "auth:signIn", args }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-  return data;
-}
-
 export default function LoginPage() {
+  const { signIn, signOut } = useAuthActions();
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,11 +29,7 @@ export default function LoginPage() {
 
   // Clear stale auth on mount
   useEffect(() => {
-    fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "auth:signOut", args: {} }),
-    }).catch(() => {});
+    signOut().catch(() => {});
   }, []);
 
   const emailForm = useForm<EmailForm>({ resolver: zodResolver(emailSchema) });
@@ -51,14 +38,11 @@ export default function LoginPage() {
   async function onEmailSubmit({ email }: EmailForm) {
     setLoading(true);
     try {
-      const data = await callAuth({ provider: "resend-otp", params: { email: email.toLowerCase().trim() } });
-      if (data.started) {
-        setEmail(email.toLowerCase().trim());
-        setStep("otp");
-        toast.success("Code sent — check your inbox");
-      } else {
-        throw new Error("Unexpected response");
-      }
+      const result = await signIn("resend-otp", { email: email.toLowerCase().trim() });
+      // signIn returns { signingIn: false } for email OTP (step 1 - code sent)
+      setEmail(email.toLowerCase().trim());
+      setStep("otp");
+      toast.success("Code sent — check your inbox");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to send code");
     } finally {
@@ -69,8 +53,8 @@ export default function LoginPage() {
   async function onOtpSubmit({ code }: OtpForm) {
     setLoading(true);
     try {
-      const data = await callAuth({ provider: "resend-otp", params: { email, code } });
-      if (data.tokens) {
+      const result = await signIn("resend-otp", { email, code });
+      if (result.signingIn) {
         window.location.href = "/onboarding";
       } else {
         throw new Error("Invalid or expired code.");
@@ -85,8 +69,8 @@ export default function LoginPage() {
   async function demoLogin(role: "admin" | "rwa" | "resident") {
     setDemoLoading(role);
     try {
-      const data = await callAuth({ provider: "anonymous" });
-      if (data.tokens) {
+      const result = await signIn("anonymous");
+      if (result.signingIn) {
         const dest = role === "resident" ? `/resident?setup=${role}` : `/dashboard?setup=${role}`;
         window.location.href = dest;
       } else {
