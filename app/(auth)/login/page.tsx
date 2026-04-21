@@ -55,7 +55,7 @@ export default function LoginPage() {
     try {
       const result = await signIn("resend-otp", { email, code });
       if (result.signingIn) {
-        window.location.href = "/onboarding";
+        window.location.href = "/dashboard";
       } else {
         throw new Error("Invalid or expired code.");
       }
