@@ -71,7 +71,7 @@ export default function LoginPage() {
     try {
       const result = await signIn("anonymous");
       if (result.signingIn) {
-        window.location.href = `/dashboard?setup=${role}`;
+        window.location.href = `/?setup=${role}`;
       } else {
         throw new Error("Demo login failed");
       }

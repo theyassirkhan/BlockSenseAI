@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "convex/react";
+import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { RwaSidebar } from "@/components/rwa/sidebar";
 import { RwaHeader } from "@/components/rwa/header";
@@ -9,6 +10,13 @@ import { RwaHeader } from "@/components/rwa/header";
 export default function RwaDashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const profile = useQuery(api.users.getMyProfile);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (profile?.role === "admin" || profile?.role === "platform_admin") {
+      router.replace("/admin");
+    }
+  }, [profile?.role]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
