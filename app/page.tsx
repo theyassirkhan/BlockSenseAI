@@ -60,7 +60,9 @@ export default function AuthRedirectPage() {
     }
 
     // Route by role + onboarding state
-    const { role, onboardingComplete, societyId } = profile;
+    const role = profile.role;
+    const onboardingComplete = (profile as any).onboardingComplete;
+    const societyId = profile.societyId;
 
     if (role === "rwa" && !onboardingComplete && !societyId) {
       router.replace("/onboarding");
