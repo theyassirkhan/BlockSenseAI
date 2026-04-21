@@ -55,7 +55,7 @@ export default function LoginPage() {
     try {
       const result = await signIn("resend-otp", { email, code });
       if (result.signingIn) {
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       } else {
         throw new Error("Invalid or expired code.");
       }
@@ -71,8 +71,7 @@ export default function LoginPage() {
     try {
       const result = await signIn("anonymous");
       if (result.signingIn) {
-        const dest = role === "resident" ? `/resident?setup=${role}` : `/dashboard?setup=${role}`;
-        window.location.href = dest;
+        window.location.href = `/dashboard?setup=${role}`;
       } else {
         throw new Error("Demo login failed");
       }

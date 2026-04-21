@@ -66,7 +66,13 @@ export default function DashboardPage() {
     if (!setup || setupDone.current) return;
     setupDone.current = true;
     setupDemoUser({ role: setup }).then(() => {
-      router.replace("/");
+      if (setup === "admin") {
+        router.replace("/admin");
+      } else if (setup === "resident") {
+        router.replace("/resident");
+      } else {
+        router.replace("/dashboard");
+      }
     }).catch(console.error);
   }, [searchParams]);
 
