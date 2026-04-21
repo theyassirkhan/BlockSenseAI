@@ -31,22 +31,24 @@ export default function AdminUsersPage() {
 
   const societyMap = new Map(societies?.map((s) => [s._id, s]) ?? []);
 
-  const filtered = (users ?? []).filter((u) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      u.name?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q) ||
-      u.phone?.includes(q)
-    );
-  });
+  const filtered = (users ?? [])
+    .filter((u) => u.role !== "resident")
+    .filter((u) => {
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        u.name?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q) ||
+        u.phone?.includes(q)
+      );
+    });
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-lg font-bold flex items-center gap-2">
           <Users className="h-5 w-5" />
-          User Management
+          RWA Managers
         </h1>
         <div className="flex items-center gap-2">
           <div className="relative">

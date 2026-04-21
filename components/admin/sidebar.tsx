@@ -11,7 +11,7 @@ import {
 const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/societies", label: "Societies", icon: Building2 },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/users", label: "RWA Managers", icon: Users },
   { href: "/admin/utilities", label: "Utilities", icon: Activity },
   { href: "/admin/broadcasts", label: "Broadcasts", icon: Megaphone },
   { href: "/admin/tickets", label: "Tickets", icon: TicketCheck },
