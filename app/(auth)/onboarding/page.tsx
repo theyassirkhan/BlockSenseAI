@@ -49,8 +49,9 @@ export default function OnboardingPage() {
   const addTank = useMutation(api.water.addTank);
   const addDGUnit = useMutation(api.power.addDGUnit);
   const createVendor = useMutation(api.vendors.create);
-  const createProfile = useMutation(api.users.createProfile);
   const setActiveSociety = useMutation(api.users.setActiveSociety);
+  const updateProfile = useMutation(api.users.updateProfile);
+  const completeOnboarding = useMutation(api.users.completeOnboarding);
 
   const societyForm = useForm<SocietyForm>({ resolver: zodResolver(societySchema), defaultValues: { city: "Bangalore" } });
 
@@ -127,8 +128,8 @@ export default function OnboardingPage() {
       for (const v of vendors) {
         await createVendor({ societyId, name: v.name, type: v.type as any, phone: v.phone, whatsapp: v.whatsapp, isPreferred: v.isPreferred });
       }
-      await createProfile({ name: "Admin", role: "admin", societyId });
       await setActiveSociety({ societyId });
+      await completeOnboarding({ whatsapp: "", whatsappVerified: false, societyId });
       toast.success("Society set up! Welcome to BlockSense.");
       router.push("/dashboard");
     } catch {

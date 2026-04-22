@@ -119,3 +119,29 @@ export const setActiveSociety = mutation({
     await ctx.db.patch(profile._id, { societyId: args.societyId });
   },
 });
+
+export const completeOnboarding = mutation({
+  args: {
+    whatsapp: v.string(),
+    whatsappVerified: v.boolean(),
+    societyId: v.optional(v.id("societies")),
+    blockId: v.optional(v.id("blocks")),
+  },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const profile = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!profile) throw new Error("Profile not found");
+    await ctx.db.patch(profile._id, {
+      whatsapp: args.whatsapp,
+      whatsappVerified: args.whatsappVerified,
+      onboardingComplete: true,
+      ...(args.societyId ? { societyId: args.societyId } : {}),
+      ...(args.blockId ? { blockId: args.blockId, defaultBlockId: args.blockId } : {}),
+    });
+    return profile._id;
+  },
+});

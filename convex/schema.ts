@@ -65,11 +65,24 @@ export default defineSchema(
       tokenIdentifier: v.optional(v.string()),
       notifWhatsapp: v.optional(v.boolean()),
       notifInApp: v.optional(v.boolean()),
+      onboardingComplete: v.optional(v.boolean()),
+      whatsappVerified: v.optional(v.boolean()),
       createdAt: v.optional(v.number()),
     })
       .index("by_society", ["societyId"])
       .index("by_token", ["tokenIdentifier"])
       .index("email", ["email"]),
+
+    whatsappVerifications: defineTable({
+      phone: v.string(),
+      code: v.string(),
+      expirationTime: v.number(),
+      verified: v.boolean(),
+      userId: v.optional(v.string()),
+      email: v.optional(v.string()),
+    })
+      .index("by_phone", ["phone"])
+      .index("by_userId", ["userId"]),
 
     waterTanks: defineTable({
       societyId: v.id("societies"),
