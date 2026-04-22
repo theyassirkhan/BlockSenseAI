@@ -28,12 +28,12 @@ export function ResidentSidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "h-screen flex flex-col bg-card border-r transition-all duration-200 shrink-0",
+        "h-screen flex flex-col sidebar-glass transition-all duration-300 shrink-0",
         collapsed ? "w-14" : "w-48"
       )}
-      style={{ borderColor: "rgba(0,0,0,0.08)" }}
+      
     >
-      <div className={cn("flex items-center gap-2.5 px-4 py-4 border-b", collapsed && "justify-center px-2")} style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+      <div className={cn("flex items-center gap-2.5 px-4 py-4 border-b border-white/5", collapsed && "justify-center px-2")} >
         <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shrink-0">
           <span className="text-white text-xs font-bold">BS</span>
         </div>
@@ -59,7 +59,7 @@ export function ResidentSidebar({ collapsed, onToggle }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-2 border-t" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+      <div className="p-2 border-t border-white/5" >
         <button
           onClick={onToggle}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

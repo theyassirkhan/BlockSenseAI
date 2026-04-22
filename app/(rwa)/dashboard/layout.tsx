@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { RwaSidebar } from "@/components/rwa/sidebar";
 import { RwaHeader } from "@/components/rwa/header";
+import { AnimatedPage } from "@/components/ui/animated-page";
+import { AmbientBg } from "@/components/ui/ambient-bg";
 
 export default function RwaDashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -19,12 +21,13 @@ export default function RwaDashboardLayout({ children }: { children: React.React
   }, [profile?.role]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <div className="flex h-screen overflow-hidden bg-background relative">
+      <AmbientBg />
       <RwaSidebar collapsed={collapsed} onToggle={() => setCollapsed(p => !p)} />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10">
         <RwaHeader societyId={profile?.societyId} />
         <main className="flex-1 overflow-y-auto p-5">
-          {children}
+          <AnimatedPage>{children}</AnimatedPage>
         </main>
       </div>
     </div>

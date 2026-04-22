@@ -47,7 +47,7 @@ export function Header({ societyId }: HeaderProps) {
   const criticalCount = alerts?.filter(a => a.severity === "critical").length ?? 0;
 
   return (
-    <header className="h-14 flex items-center justify-between px-4 border-b bg-card shrink-0" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+    <header className="h-14 flex items-center justify-between px-4 shrink-0 header-glass sticky top-0 z-20">
       {/* Society name */}
       <div className="flex items-center gap-2 min-w-0">
         <span className="text-sm font-semibold text-foreground truncate">{society?.name ?? "BlockSense"}</span>
@@ -72,7 +72,7 @@ export function Header({ societyId }: HeaderProps) {
               <div
                 role="listbox"
                 className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-lg py-1 z-50 min-w-[160px]"
-                style={{ borderColor: "rgba(0,0,0,0.1)" }}
+                style={{ borderColor: "rgba(255,255,255,0.08)" }}
               >
                 {blocks.map(b => (
                   <button
@@ -88,7 +88,7 @@ export function Header({ societyId }: HeaderProps) {
                     {b.name}
                   </button>
                 ))}
-                <div className="border-t my-1" style={{ borderColor: "rgba(0,0,0,0.08)" }} />
+                <div className="border-t my-1" style={{ borderColor: "rgba(255,255,255,0.06)" }} />
                 <button
                   onClick={() => { router.push("/block-select"); setBlockOpen(false); }}
                   className="w-full text-left px-3 py-2 text-xs text-muted-foreground hover:bg-accent transition-colors"
@@ -131,9 +131,9 @@ export function Header({ societyId }: HeaderProps) {
             <div
               role="menu"
               className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-lg py-1 z-50 min-w-[160px]"
-              style={{ borderColor: "rgba(0,0,0,0.1)" }}
+              style={{ borderColor: "rgba(255,255,255,0.08)" }}
             >
-              <div className="px-3 py-2 border-b" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+              <div className="px-3 py-2 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                 <p className="text-sm font-medium">{profile?.name}</p>
                 <p className="text-xs text-muted-foreground capitalize">{profile?.role}</p>
               </div>
