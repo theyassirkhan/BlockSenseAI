@@ -72,7 +72,7 @@ export function ResidentHeader() {
             </button>
             <button
               role="menuitem"
-              onClick={async () => { await signOut(); router.push("/login"); }}
+              onClick={async () => { await signOut(); window.location.href = "/api/auth/logout"; }}
               className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-destructive hover:bg-accent transition-colors"
             >
               <LogOut className="h-3.5 w-3.5" />Sign out
