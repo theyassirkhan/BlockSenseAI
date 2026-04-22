@@ -160,7 +160,7 @@ export default function StaffPage() {
               ) : (
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b text-xs text-muted-foreground" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                    <tr className="border-b text-xs text-muted-foreground" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
                       <th className="text-left pb-2 font-medium">Name</th>
                       <th className="text-left pb-2 font-medium">Role</th>
                       <th className="text-left pb-2 font-medium hidden sm:table-cell">Shift</th>
@@ -264,7 +264,7 @@ export default function StaffPage() {
                       </Card>
                     ))}
                     {colTasks.length === 0 && (
-                      <div className="border-2 border-dashed rounded-lg p-4 text-center text-xs text-muted-foreground" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                      <div className="border-2 border-dashed rounded-lg p-4 text-center text-xs text-muted-foreground" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
                         No tasks
                       </div>
                     )}

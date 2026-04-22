@@ -144,7 +144,7 @@ export default function DashboardPage() {
     <div className="space-y-5 animate-count-up">
       {/* Alert banner */}
       {criticalAlerts.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+        <div className="rounded-xl border rounded-lg p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-critical shrink-0" />
             <span className="text-sm font-medium text-critical">
@@ -259,7 +259,7 @@ export default function DashboardPage() {
             <CardContent>
               {sewageLatest ? (
                 <>
-                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sewageLatest.stpStatus === "normal" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sewageLatest.stpStatus === "normal" ? "bg-emerald-400/15 text-emerald-400" : "bg-red-400/15 text-red-400"}`}>
                     {sewageLatest.stpStatus === "normal" ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
                     {sewageLatest.stpStatus}
                   </div>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
                     <p className="text-2xl font-bold">{waterPred.avgDailyConsumption} <span className="text-sm font-normal">KL</span></p>
                   </div>
                 </div>
-                <div className="rounded-lg border p-3 flex items-center justify-between" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <div className="rounded-lg border p-3 flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
                   <p className="text-xs text-muted-foreground">Recommended order</p>
                   <p className="text-xs font-semibold">{daysFromNow(waterPred.recommendedOrderDate)}</p>
                 </div>

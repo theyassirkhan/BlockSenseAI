@@ -87,7 +87,7 @@ export default function ServiceRequestsPage() {
           { label: "Resolved", count: (requests ?? []).filter(r => r.status === "resolved").length, color: "text-success" },
           { label: "Total", count: (requests ?? []).length, color: "text-foreground" },
         ].map(({ label, count, color }) => (
-          <div key={label} className="bg-card border rounded-lg p-4" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+          <div key={label} className="bg-card border rounded-lg p-4" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">{label}</p>
             <p className={`text-2xl font-bold mt-1 ${color}`}>{count}</p>
           </div>
@@ -99,7 +99,7 @@ export default function ServiceRequestsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-muted-foreground" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+                <tr className="border-b text-muted-foreground" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
                   <th className="text-left px-4 py-3 font-medium">Description</th>
                   <th className="text-left px-4 py-3 font-medium">Category</th>
                   <th className="text-left px-4 py-3 font-medium">Priority</th>

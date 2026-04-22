@@ -111,7 +111,7 @@ export default function ResidentUtilitiesPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">STP status</span>
-                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sewageLatest.stpStatus === "normal" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${sewageLatest.stpStatus === "normal" ? "bg-emerald-400/15 text-emerald-400" : "bg-red-400/15 text-red-400"}`}>
                     {sewageLatest.stpStatus === "normal" ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
                     {sewageLatest.stpStatus}
                   </div>

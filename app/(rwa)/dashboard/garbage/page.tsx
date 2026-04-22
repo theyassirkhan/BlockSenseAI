@@ -115,7 +115,7 @@ export default function GarbagePage() {
 
       {/* Missed */}
       {missed && missed.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="rounded-xl border rounded-lg p-4">
           <p className="text-sm font-medium text-critical flex items-center gap-1.5 mb-2">
             <AlertTriangle className="h-4 w-4" />
             {missed.length} missed collection{missed.length > 1 ? "s" : ""}

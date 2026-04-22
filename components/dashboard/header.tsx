@@ -63,7 +63,7 @@ export function Header({ societyId }: HeaderProps) {
               aria-expanded={blockOpen}
               aria-haspopup="listbox"
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-sm font-medium hover:bg-accent transition-colors"
-              style={{ borderColor: "rgba(0,0,0,0.12)" }}
+              style={{ borderColor: "rgba(255,255,255,0.09)" }}
             >
               <span className="max-w-[120px] truncate">{activeBlock?.name ?? "Select block"}</span>
               <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", blockOpen && "rotate-180")} />
