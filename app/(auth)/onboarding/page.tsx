@@ -167,7 +167,7 @@ export default function OnboardingPage() {
           ))}
         </div>
 
-        <div className="bg-card rounded-lg border p-6 shadow-sm" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+        <div className="bg-card rounded-lg border p-6 shadow-sm" style={{ borderColor: "#27272A" }}>
 
           {/* Step 1: Society */}
           {step === 0 && (

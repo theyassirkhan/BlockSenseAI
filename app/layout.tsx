@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F6E56",
+  themeColor: "#A855F7",
   width: "device-width",
   initialScale: 1,
 };
@@ -25,8 +25,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="dark"
+            enableSystem={false}
             disableTransitionOnChange={false}
             storageKey="blocksense-theme"
           >

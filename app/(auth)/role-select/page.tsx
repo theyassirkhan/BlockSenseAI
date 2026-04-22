@@ -85,7 +85,7 @@ export default function RoleSelectPage() {
           <p className="text-sm text-muted-foreground mt-1">Set up your profile to get started</p>
         </div>
 
-        <div className="bg-card rounded-xl border p-6 shadow-sm space-y-5" style={{ borderColor: "rgba(0,0,0,0.08)" }}>
+        <div className="bg-card rounded-xl border p-6 shadow-sm space-y-5" style={{ borderColor: "#27272A" }}>
           {/* Name */}
           <div className="space-y-1.5">
             <Label>Your name *</Label>
