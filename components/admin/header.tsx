@@ -4,12 +4,14 @@ import { useQuery } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
-import { LogOut, ChevronDown, Shield } from "lucide-react";
+import { LogOut, ChevronDown, Shield, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
-export function AdminHeader() {
+interface AdminHeaderProps { onMenuOpen?: () => void; }
+
+export function AdminHeader({ onMenuOpen }: AdminHeaderProps) {
   const { signOut } = useAuthActions();
   const router = useRouter();
   const profile = useQuery(api.users.getMyProfile);
@@ -30,6 +32,9 @@ export function AdminHeader() {
       style={{ borderColor: "rgba(255,255,255,0.06)" }}
     >
       <div className="flex items-center gap-2">
+        <button onClick={onMenuOpen} className="p-1.5 rounded-md hover:bg-white/10 active:bg-white/20 transition-colors md:hidden shrink-0" aria-label="Open menu">
+          <Menu className="h-5 w-5 text-white/70" />
+        </button>
         <Shield className="h-4 w-4 text-primary" />
         <span className="text-sm font-semibold text-foreground">Platform Admin Console</span>
       </div>

@@ -6,16 +6,17 @@ import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useActiveBlock } from "@/hooks/use-active-block";
-import { BellRing, ChevronDown, LogOut, Settings, User } from "lucide-react";
+import { BellRing, ChevronDown, LogOut, Settings, User, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 
 interface HeaderProps {
   societyId?: Id<"societies">;
+  onMenuOpen?: () => void;
 }
 
-export function RwaHeader({ societyId }: HeaderProps) {
+export function RwaHeader({ societyId, onMenuOpen }: HeaderProps) {
   const { signOut } = useAuthActions();
   const router = useRouter();
   const profile = useQuery(api.users.getMyProfile);
@@ -48,6 +49,9 @@ export function RwaHeader({ societyId }: HeaderProps) {
   return (
     <header className="h-14 flex items-center justify-between px-4 shrink-0 header-glass sticky top-0 z-20">
       <div className="flex items-center gap-2 min-w-0">
+        <button onClick={onMenuOpen} className="p-1.5 rounded-md hover:bg-white/10 active:bg-white/20 transition-colors md:hidden shrink-0" aria-label="Open menu">
+          <Menu className="h-5 w-5 text-white/70" />
+        </button>
         <span className="text-sm font-semibold text-foreground truncate">{society?.name ?? "BlockSense"}</span>
         {society?.city && <span className="text-xs text-muted-foreground hidden sm:inline">{society.city}</span>}
       </div>
