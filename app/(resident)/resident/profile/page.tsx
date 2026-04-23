@@ -65,7 +65,7 @@ export default function ResidentProfilePage() {
     setSigningOut(true);
     try {
       await signOut();
-      router.replace("/");
+      router.replace("/login");
     } catch {
       setSigningOut(false);
     }
