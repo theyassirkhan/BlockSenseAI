@@ -12,8 +12,7 @@ function RootRedirect() {
   const setup = searchParams.get("setup");
 
   useEffect(() => {
-    if (profile === undefined) return;
-
+    // Demo login: forward immediately with the setup param — don't wait for profile
     if (setup) {
       if (setup === "admin") {
         router.replace(`/admin?setup=admin`);
@@ -25,11 +24,12 @@ function RootRedirect() {
       return;
     }
 
+    // Normal login: wait for profile to load then route by role
+    if (profile === undefined) return;
     if (profile === null) {
       router.replace("/login");
       return;
     }
-
     if (profile.role === "platform_admin" || profile.role === "admin") {
       router.replace("/admin");
     } else if (profile.role === "resident") {
