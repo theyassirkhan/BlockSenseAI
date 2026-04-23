@@ -15,8 +15,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const profile = useQuery(api.users.getMyProfile);
   const router = useRouter();
 
-  if (profile === null) {
-    router.replace("/login");
+  if (profile !== undefined && profile !== null &&
+      profile.role !== "admin" && profile.role !== "platform_admin") {
+    router.replace("/dashboard");
     return null;
   }
 
