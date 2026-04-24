@@ -21,6 +21,7 @@ import type * as gas from "../gas.js";
 import type * as http from "../http.js";
 import type * as notices from "../notices.js";
 import type * as notifications from "../notifications.js";
+import type * as otp from "../otp.js";
 import type * as payments from "../payments.js";
 import type * as power from "../power.js";
 import type * as predictions from "../predictions.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   notices: typeof notices;
   notifications: typeof notifications;
+  otp: typeof otp;
   payments: typeof payments;
   power: typeof power;
   predictions: typeof predictions;
