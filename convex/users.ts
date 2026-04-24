@@ -31,7 +31,7 @@ export const getMyProfile = query({
 export const createProfile = mutation({
   args: {
     name: v.string(),
-    role: v.union(v.literal("admin"), v.literal("rwa"), v.literal("resident")),
+    role: v.union(v.literal("admin"), v.literal("rwa"), v.literal("resident"), v.literal("guard"), v.literal("staff")),
     societyId: v.optional(v.id("societies")),
     blockId: v.optional(v.id("blocks")),
     flatNumber: v.optional(v.string()),

@@ -54,7 +54,8 @@ export default defineSchema(
           v.literal("admin"),
           v.literal("rwa"),
           v.literal("resident"),
-          v.literal("staff")
+          v.literal("staff"),
+          v.literal("guard")
         )
       ),
       flatNumber: v.optional(v.string()),
