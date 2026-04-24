@@ -67,6 +67,51 @@ export const remove = mutation({
   },
 });
 
+export const acknowledge = mutation({
+  args: { noticeId: v.id("notices") },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!user) throw new Error("Profile not found");
+    const existing = await ctx.db
+      .query("noticeAcks")
+      .withIndex("by_user_notice", (q) => q.eq("userId", user._id).eq("noticeId", args.noticeId))
+      .first();
+    if (!existing) {
+      await ctx.db.insert("noticeAcks", { noticeId: args.noticeId, userId: user._id, ackedAt: Date.now() });
+    }
+  },
+});
+
+export const getMyAcks = query({
+  args: { societyId: v.id("societies") },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) return [];
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!user) return [];
+    const notices = await ctx.db
+      .query("notices")
+      .withIndex("by_society", (q) => q.eq("societyId", args.societyId))
+      .collect();
+    const acks = await Promise.all(
+      notices.map(n =>
+        ctx.db.query("noticeAcks")
+          .withIndex("by_user_notice", (q) => q.eq("userId", user._id).eq("noticeId", n._id))
+          .first()
+      )
+    );
+    return notices.map((n, i) => n._id).filter((_, i) => acks[i] !== null);
+  },
+});
+
 export const update = mutation({
   args: {
     noticeId: v.id("notices"),

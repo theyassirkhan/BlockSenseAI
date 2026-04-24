@@ -2,6 +2,15 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    return ctx.storage.generateUploadUrl();
+  },
+});
+
 export const create = mutation({
   args: {
     societyId: v.id("societies"),
@@ -9,6 +18,7 @@ export const create = mutation({
     category: v.string(),
     description: v.string(),
     priority: v.union(v.literal("low"), v.literal("medium"), v.literal("urgent")),
+    photoStorageId: v.optional(v.id("_storage")),
   },
   handler: async (ctx, args) => {
     const authId = await getAuthUserId(ctx);

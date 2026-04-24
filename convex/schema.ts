@@ -576,6 +576,14 @@ export default defineSchema(
       .index("by_society", ["societyId"])
       .index("by_resident", ["societyId", "registeredBy"]),
 
+    noticeAcks: defineTable({
+      noticeId: v.id("notices"),
+      userId: v.id("users"),
+      ackedAt: v.number(),
+    })
+      .index("by_notice", ["noticeId"])
+      .index("by_user_notice", ["userId", "noticeId"]),
+
     vehicles: defineTable({
       societyId: v.id("societies"),
       residentId: v.id("users"),

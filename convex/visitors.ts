@@ -257,12 +257,15 @@ export const checkIn = mutation({
     const now = Date.now();
     await ctx.db.patch(args.visitorId, { checkedInAt: now });
 
-    // Notify resident
-    await ctx.scheduler.runAfter(0, internal.visitors.notifyResidentCheckIn, {
-      residentId: visitor.registeredBy,
-      visitorName: visitor.visitorName,
-      checkedInAt: now,
-    });
+    // Only notify if registered by a resident (not a guard walk-in)
+    const registrar = await ctx.db.get(visitor.registeredBy);
+    if (registrar?.role === "resident") {
+      await ctx.scheduler.runAfter(0, internal.visitors.notifyResidentCheckIn, {
+        residentId: visitor.registeredBy,
+        visitorName: visitor.visitorName,
+        checkedInAt: now,
+      });
+    }
   },
 });
 
@@ -337,5 +340,22 @@ export const getTodayLog = query({
       .order("desc")
       .take(100);
     return visitors;
+  },
+});
+
+export const getHistory = query({
+  args: { societyId: v.id("societies"), limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const visitors = await ctx.db
+      .query("visitors")
+      .withIndex("by_society", q => q.eq("societyId", args.societyId))
+      .order("desc")
+      .take(args.limit ?? 50);
+    return Promise.all(visitors.map(async v => {
+      const resident = await ctx.db.get(v.registeredBy);
+      return { ...v, residentName: resident?.name ?? "—", flatNumber: resident?.flatNumber ?? "—" };
+    }));
   },
 });

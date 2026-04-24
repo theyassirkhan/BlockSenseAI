@@ -129,6 +129,48 @@ export const seedAllDemoData = mutation({
       .query("waterReadings")
       .withIndex("by_society", (q) => q.eq("societyId", society._id))
       .first();
+
+    // Always re-seed today's visitors regardless of skip — so guard demo works every day
+    const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+    const existingTodayVisitors = await ctx.db
+      .query("visitors")
+      .withIndex("by_society", q => q.eq("societyId", society._id))
+      .filter(q => q.gte(q.field("createdAt"), dayStart.getTime()))
+      .first();
+
+    if (existingWater && existingTodayVisitors) return { skipped: true, reason: "Already seeded" };
+
+    if (existingWater && !existingTodayVisitors) {
+      // Only re-seed today's visitors
+      const nowTs = Date.now(); const HOUR = 3600000;
+      const residentUsers = await ctx.db.query("users")
+        .withIndex("by_society", q => q.eq("societyId", society._id))
+        .filter(q => q.eq(q.field("role"), "resident")).take(5);
+      const rIds = residentUsers.map(r => r._id);
+      const TV = [
+        { name: "Kiran Bhat", phone: "+919911001100", passCode: "720114", hoursAgo: 8, duration: 1 },
+        { name: "Neha Verma", phone: "+919911002200", passCode: "385621", hoursAgo: 5, duration: 2 },
+        { name: "Sanjay Dubey", phone: "+919911003300", passCode: "914073", hoursAgo: 3, duration: 1 },
+        { name: "Pooja Singh", phone: "+919911004400", passCode: "562890", hoursAgo: 2, duration: null },
+        { name: "Vikram Nair", phone: "+919911005500", passCode: "103456", hoursAgo: 1, duration: null },
+        { name: "Delivery – Amazon", phone: "+919911006600", passCode: "847291", hoursAgo: 0, duration: null },
+      ];
+      for (let i = 0; i < TV.length; i++) {
+        const tv = TV[i];
+        const checkedInAt = nowTs - tv.hoursAgo * HOUR;
+        await ctx.db.insert("visitors", {
+          societyId: society._id,
+          registeredBy: (rIds[i % rIds.length] ?? rIds[0]) as any,
+          visitorName: tv.name, visitorPhone: tv.phone,
+          expectedAt: checkedInAt - 15 * 60000, passCode: tv.passCode,
+          checkedInAt: tv.hoursAgo <= 0 ? undefined : checkedInAt,
+          checkedOutAt: tv.duration != null ? checkedInAt + tv.duration * HOUR : undefined,
+          createdAt: checkedInAt - 15 * 60000,
+        });
+      }
+      return { skipped: true, reason: "Re-seeded today visitors" };
+    }
+
     if (existingWater) return { skipped: true, reason: "Already seeded" };
 
     const now = Date.now();
@@ -559,7 +601,7 @@ export const seedAllDemoData = mutation({
         visitorName: vname,
         visitorPhone: vphone,
         expectedAt: t + 15 * HOUR,
-        passCode: `GV${1000 + i}`,
+        passCode: String(200100 + i).slice(0, 6),
         checkedInAt: t + 15 * HOUR + 5 * 60000,
         checkedOutAt: i < 8 ? t + 17 * HOUR : undefined,
         createdAt: t + 12 * HOUR,
@@ -568,12 +610,12 @@ export const seedAllDemoData = mutation({
 
     // Today's visitors – for guard demo "Today's Log"
     const TODAY_VISITORS = [
-      { name: "Kiran Bhat", phone: "+919911001100", resident: 0, passCode: "GV2001", hoursAgo: 8, duration: 1 },
-      { name: "Neha Verma", phone: "+919911002200", resident: 1, passCode: "GV2002", hoursAgo: 5, duration: 2 },
-      { name: "Sanjay Dubey", phone: "+919911003300", resident: 2, passCode: "GV2003", hoursAgo: 3, duration: 1 },
-      { name: "Pooja Singh", phone: "+919911004400", resident: 3, passCode: "GV2004", hoursAgo: 2, duration: null },
-      { name: "Vikram Nair", phone: "+919911005500", resident: 4, passCode: "GV2005", hoursAgo: 1, duration: null },
-      { name: "Delivery – Amazon", phone: "+919911006600", resident: 1, passCode: "GV2006", hoursAgo: 0, duration: null },
+      { name: "Kiran Bhat", phone: "+919911001100", resident: 0, passCode: "720114", hoursAgo: 8, duration: 1 },
+      { name: "Neha Verma", phone: "+919911002200", resident: 1, passCode: "385621", hoursAgo: 5, duration: 2 },
+      { name: "Sanjay Dubey", phone: "+919911003300", resident: 2, passCode: "914073", hoursAgo: 3, duration: 1 },
+      { name: "Pooja Singh", phone: "+919911004400", resident: 3, passCode: "562890", hoursAgo: 2, duration: null },
+      { name: "Vikram Nair", phone: "+919911005500", resident: 4, passCode: "103456", hoursAgo: 1, duration: null },
+      { name: "Delivery – Amazon", phone: "+919911006600", resident: 1, passCode: "847291", hoursAgo: 0, duration: null },
     ];
     for (const tv of TODAY_VISITORS) {
       const checkedInAt = now - tv.hoursAgo * HOUR;
