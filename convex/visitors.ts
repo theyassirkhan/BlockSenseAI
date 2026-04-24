@@ -67,3 +67,68 @@ export const checkOut = mutation({
     await ctx.db.patch(args.visitorId, { checkedOutAt: Date.now() });
   },
 });
+
+// ── Guard PWA mutations ───────────────────────────────────────────────────
+
+export const lookupByPassCode = query({
+  args: { societyId: v.id("societies"), passCode: v.string() },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const visitor = await ctx.db
+      .query("visitors")
+      .withIndex("by_society", q => q.eq("societyId", args.societyId))
+      .filter(q => q.eq(q.field("passCode"), args.passCode))
+      .first();
+    if (!visitor) return null;
+    const resident = await ctx.db.get(visitor.registeredBy);
+    return { ...visitor, residentName: resident?.name, flatNumber: resident?.flatNumber };
+  },
+});
+
+export const walkInEntry = mutation({
+  args: {
+    societyId: v.id("societies"),
+    visitorName: v.string(),
+    visitorPhone: v.string(),
+    purposeFlat: v.string(),
+    vehicleNumber: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const guard = await ctx.db
+      .query("users")
+      .withIndex("by_token", q => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!guard) throw new Error("Profile not found");
+    const now = Date.now();
+    return ctx.db.insert("visitors", {
+      societyId: args.societyId,
+      registeredBy: guard._id,
+      visitorName: args.visitorName,
+      visitorPhone: args.visitorPhone,
+      expectedAt: now,
+      passCode: generatePassCode(),
+      checkedInAt: now,
+      createdAt: now,
+    });
+  },
+});
+
+export const getTodayLog = query({
+  args: { societyId: v.id("societies") },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const visitors = await ctx.db
+      .query("visitors")
+      .withIndex("by_society", q => q.eq("societyId", args.societyId))
+      .filter(q => q.gte(q.field("createdAt"), dayStart.getTime()))
+      .order("desc")
+      .take(100);
+    return visitors;
+  },
+});
