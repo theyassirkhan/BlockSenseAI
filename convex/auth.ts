@@ -1,15 +1,15 @@
 import { convexAuth } from "@convex-dev/auth/server";
 import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
+import { Email } from "@convex-dev/auth/providers/Email";
 
-// Bypass Email factory utility completely to guarantee property preservation
-const resendOtpProvider = {
+const ResendOTP = Email({
   id: "resend-otp",
-  type: "email" as const,
-  name: "Email",
   from: "BlockSense <onboarding@resend.dev>",
   maxAge: 60 * 60,
-  options: {},
-  sendVerificationRequest: async ({ identifier: email, token, provider }: any) => {
+  generateVerificationToken: async () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  },
+  sendVerificationRequest: async ({ identifier: email, token }: any) => {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.AUTH_RESEND_KEY);
     const { error } = await resend.emails.send({
@@ -35,14 +35,11 @@ const resendOtpProvider = {
     });
     if (error) throw new Error(`Failed to send OTP: ${error.message}`);
   },
-  generateVerificationToken: async () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  },
-};
+});
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     Anonymous,
-    resendOtpProvider,
+    ResendOTP,
   ],
 });
