@@ -6,6 +6,12 @@ export default defineSchema(
   {
     ...authTables,
 
+    otpCodes: defineTable({
+      email: v.string(),
+      codeHash: v.string(),
+      expiresAt: v.number(),
+    }).index("by_email", ["email"]),
+
     societies: defineTable({
       name: v.string(),
       address: v.optional(v.string()),
