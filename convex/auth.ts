@@ -9,6 +9,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
     Email({
       id: "resend-otp",
       maxAge: 60 * 10,
+      authorize: undefined,
       async generateVerificationToken() {
         return String(Math.floor(100000 + Math.random() * 900000));
       },
