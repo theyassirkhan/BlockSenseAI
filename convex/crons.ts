@@ -17,6 +17,13 @@ crons.interval(
   internal.garbage.checkMissedCollections
 );
 
+// Daily tanker need predictions 6am IST (0:30am UTC)
+crons.daily(
+  "daily tanker predictions",
+  { hourUTC: 0, minuteUTC: 30 },
+  internal.predictions.runDailyTankerPredictions
+);
+
 // Weekly digest every Sunday 8am IST (2:30am UTC)
 crons.weekly(
   "weekly digest",

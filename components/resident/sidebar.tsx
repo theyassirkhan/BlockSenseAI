@@ -5,13 +5,16 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Droplets, CreditCard, ClipboardList,
-  Bell, User, ChevronLeft, X,
+  Bell, User, ChevronLeft, X, UserPlus, Car, MessageSquareWarning,
 } from "lucide-react";
 
 const NAV = [
   { href: "/resident", label: "Home", icon: LayoutDashboard },
   { href: "/resident/utilities", label: "Utilities", icon: Droplets },
   { href: "/resident/payments", label: "Payments", icon: CreditCard },
+  { href: "/resident/visitors", label: "Visitors", icon: UserPlus },
+  { href: "/resident/vehicles", label: "Vehicles", icon: Car },
+  { href: "/resident/complaints", label: "Complaints", icon: MessageSquareWarning },
   { href: "/resident/requests", label: "Requests", icon: ClipboardList },
   { href: "/resident/notices", label: "Notices", icon: Bell },
   { href: "/resident/profile", label: "Profile", icon: User },

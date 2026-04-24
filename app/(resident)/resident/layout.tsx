@@ -1,14 +1,20 @@
 "use client";
 
 import { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { ResidentSidebar } from "@/components/resident/sidebar";
 import { ResidentHeader } from "@/components/resident/header";
 import { AnimatedPage } from "@/components/ui/animated-page";
 import { AmbientBg } from "@/components/ui/ambient-bg";
+import { AiChat } from "@/components/ui/ai-chat";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export default function ResidentLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const profile = useQuery(api.users.getMyProfile);
+  const society = useQuery(api.societies.get, profile?.societyId ? { societyId: profile.societyId as Id<"societies"> } : "skip");
 
   return (
     <div className="flex h-screen overflow-hidden bg-background relative">
@@ -25,6 +31,15 @@ export default function ResidentLayout({ children }: { children: React.ReactNode
           <AnimatedPage>{children}</AnimatedPage>
         </main>
       </div>
+      {profile?.societyId && profile?.defaultBlockId && (
+        <AiChat
+          societyId={profile.societyId}
+          blockId={profile.defaultBlockId}
+          residentName={profile.name ?? "Resident"}
+          flatNumber={profile.flatNumber ?? ""}
+          societyName={society?.name ?? "Society"}
+        />
+      )}
     </div>
   );
 }

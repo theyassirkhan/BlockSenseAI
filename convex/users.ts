@@ -145,3 +145,65 @@ export const completeOnboarding = mutation({
     return profile._id;
   },
 });
+
+export const bulkImportResidents = mutation({
+  args: {
+    societyId: v.id("societies"),
+    blockId: v.id("blocks"),
+    rows: v.array(v.object({
+      name: v.string(),
+      flatNumber: v.string(),
+      phone: v.optional(v.string()),
+      email: v.optional(v.string()),
+      flatType: v.optional(v.string()),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+
+    let inserted = 0;
+    let skipped = 0;
+
+    for (const row of args.rows) {
+      if (!row.name || !row.flatNumber) { skipped++; continue; }
+
+      const existing = await ctx.db
+        .query("users")
+        .withIndex("by_society", (q) => q.eq("societyId", args.societyId))
+        .filter((q) => q.eq(q.field("flatNumber"), row.flatNumber))
+        .first();
+
+      if (existing) {
+        await ctx.db.patch(existing._id, {
+          name: row.name,
+          phone: row.phone,
+          email: row.email,
+          flatType: row.flatType,
+        });
+        skipped++;
+      } else {
+        await ctx.db.insert("users", {
+          societyId: args.societyId,
+          blockId: args.blockId,
+          defaultBlockId: args.blockId,
+          name: row.name,
+          flatNumber: row.flatNumber,
+          phone: row.phone,
+          email: row.email,
+          flatType: row.flatType,
+          role: "resident",
+          isActive: true,
+        });
+        inserted++;
+      }
+    }
+
+    return { inserted, skipped };
+  },
+});
+
+export const getById = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => ctx.db.get(args.userId),
+});

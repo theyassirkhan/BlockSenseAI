@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Settings2 } from "lucide-react";
+import { CreditCard, Settings2, ExternalLink, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
@@ -41,6 +41,13 @@ export default function PaymentsPage() {
   const [showChargeForm, setShowChargeForm] = useState(false);
   const [chargeForm, setChargeForm] = useState({ flatType: "standard", monthlyAmount: "", dueDay: "5" });
   const [filterStatus, setFilterStatus] = useState("all");
+  const WA_NUMBER = "919739121146";
+
+  function buildWaReminder(residentName: string, flatNumber: string, description: string, amount: number, phone?: string) {
+    const msg = `Dear ${residentName || "Resident"} (Flat ${flatNumber || ""}), this is a reminder that ₹${amount.toLocaleString("en-IN")} for ${description} is due. Please pay at the earliest to avoid late fees. — Society Management`;
+    const num = phone ? phone.replace(/\D/g, "").replace(/^0/, "91") : WA_NUMBER;
+    return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+  }
 
   const filtered = (payments ?? []).filter(p =>
     filterStatus === "all" || p.status === filterStatus
@@ -175,7 +182,7 @@ export default function PaymentsPage() {
               <tbody>
                 {filtered.map(p => (
                   <tr key={p._id} className="border-b hover:bg-muted/30 transition-colors" style={{ borderColor: "rgba(0,0,0,0.05)" }}>
-                    <td className="px-4 py-3 font-medium max-w-[200px] truncate">{p.description}</td>
+                    <td className="px-4 py-3 font-medium max-w-[180px] truncate">{p.description}</td>
                     <td className="px-4 py-3">₹{p.amount.toLocaleString("en-IN")}</td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">{formatDateTime(p.dueDate)}</td>
                     <td className="px-4 py-3">
@@ -187,11 +194,24 @@ export default function PaymentsPage() {
                       {p.paidAt ? formatDateTime(p.paidAt) : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      {p.status === "pending_confirmation" && (
-                        <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleConfirm(p._id)}>
-                          Confirm
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {p.status === "pending_confirmation" && (
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleConfirm(p._id)}>
+                            Confirm
+                          </Button>
+                        )}
+                        {(p.status === "pending" || p.status === "overdue") && (
+                          <a
+                            href={buildWaReminder((p as any).residentName ?? "", (p as any).flatNumber ?? "", p.description, p.amount, (p as any).phone)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-green-400 hover:text-green-300"
+                            title="Send WhatsApp reminder"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                          </a>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

@@ -13,15 +13,16 @@ import {
   ClipboardList, Bell, CheckCircle2, AlertTriangle, Sparkles, Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-export default function ResidentHomePage() {
+function ResidentHomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setupDemoUser = useMutation(api.demo.setupDemoUser);
+  const seedAllDemoData = useMutation(api.demo.seedAllDemoData);
   const setupDone = useRef(false);
 
   const profile = useQuery(api.users.getMyProfile);
@@ -30,7 +31,10 @@ export default function ResidentHomePage() {
     const setup = searchParams.get("setup") as "admin" | "rwa" | "resident" | null;
     if (!setup || setupDone.current) return;
     setupDone.current = true;
-    setupDemoUser({ role: setup }).then(() => router.replace("/resident")).catch(console.error);
+    setupDemoUser({ role: setup })
+      .then(() => seedAllDemoData({}))
+      .catch(() => {})
+      .finally(() => router.replace("/resident"));
   }, [searchParams]);
 
   const { blockId } = useActiveBlock(profile?.defaultBlockId);
@@ -194,5 +198,13 @@ export default function ResidentHomePage() {
         </ScrollReveal>
       )}
     </div>
+  );
+}
+
+export default function ResidentHomePage() {
+  return (
+    <Suspense>
+      <ResidentHomePageInner />
+    </Suspense>
   );
 }

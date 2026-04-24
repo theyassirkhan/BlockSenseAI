@@ -16,8 +16,9 @@ import {
   Droplets, Zap, AlertTriangle, CheckCircle2, Flame, Wind,
   Sparkles, Loader2,
 } from "lucide-react";
+import { PdfReportButton } from "@/components/ui/pdf-report";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
@@ -67,7 +68,7 @@ function HealthGauge({ score, grade }: { score: number; grade: string }) {
   );
 }
 
-export default function DashboardPage() {
+function DashboardPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setupDemoUser = useMutation(api.demo.setupDemoUser);
@@ -81,7 +82,10 @@ export default function DashboardPage() {
     const setup = searchParams.get("setup") as "admin" | "rwa" | "resident" | null;
     if (!setup || setupDone.current) return;
     setupDone.current = true;
-    setupDemoUser({ role: setup }).then(() => router.replace("/dashboard")).catch(console.error);
+    setupDemoUser({ role: setup })
+      .then(() => seedAllDemoData({}))
+      .catch(() => {})
+      .finally(() => router.replace("/dashboard"));
   }, [searchParams]);
 
   const { blockId } = useActiveBlock(profile?.defaultBlockId);
@@ -181,10 +185,15 @@ export default function DashboardPage() {
             Society health will appear once data is logged.
           </motion.div>
         )}
-        <Button size="sm" variant="outline" onClick={handleSeedData} disabled={seeding} className="shrink-0 border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10">
-          {seeding ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-2 h-3.5 w-3.5" />}
-          Load demo data
-        </Button>
+        <div className="flex items-center gap-2 shrink-0">
+          {societyId && blockId && (
+            <PdfReportButton societyId={societyId} blockId={blockId} societyName={profile?.name ?? "Society"} />
+          )}
+          <Button size="sm" variant="outline" onClick={handleSeedData} disabled={seeding} className="border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10">
+            {seeding ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Sparkles className="mr-2 h-3.5 w-3.5" />}
+            Load demo data
+          </Button>
+        </div>
       </div>
 
       {/* Stat cards */}
@@ -315,5 +324,13 @@ export default function DashboardPage() {
         </ScrollReveal>
       )}
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense>
+      <DashboardPageInner />
+    </Suspense>
   );
 }

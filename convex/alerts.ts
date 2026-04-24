@@ -3,6 +3,50 @@ import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { internal } from "./_generated/api";
 
+// ── Helper: insert alert + schedule AI explanation ────────────────────────
+
+async function insertAlertWithAI(
+  ctx: any,
+  data: {
+    societyId: any;
+    blockId: any;
+    utility: any;
+    alertType: any;
+    severity: any;
+    title: string;
+    message: string;
+    metadata?: any;
+  }
+) {
+  const alertId = await ctx.db.insert("alerts", {
+    ...data,
+    isResolved: false,
+    triggeredAt: Date.now(),
+  });
+
+  // Fetch society + block names for Claude context (best-effort)
+  try {
+    const society = await ctx.db.get(data.societyId);
+    const block = await ctx.db.get(data.blockId);
+    await ctx.scheduler.runAfter(0, internal.ai.explainAlert, {
+      alertId,
+      title: data.title,
+      message: data.message,
+      utility: data.utility,
+      severity: data.severity,
+      metadata: data.metadata,
+      societyName: society?.name ?? "Unknown Society",
+      blockName: block?.name ?? "Unknown Block",
+    });
+  } catch {
+    // AI explanation is non-critical — don't fail the alert insertion
+  }
+
+  return alertId;
+}
+
+// ── Queries ───────────────────────────────────────────────────────────────
+
 export const getActiveAlerts = query({
   args: { societyId: v.id("societies"), blockId: v.id("blocks") },
   handler: async (ctx, args) => {
@@ -57,6 +101,8 @@ export const resolveAlert = mutation({
   },
 });
 
+// ── Threshold checks (all use insertAlertWithAI) ──────────────────────────
+
 export const checkWaterThresholds = internalMutation({
   args: { societyId: v.id("societies"), blockId: v.id("blocks") },
   handler: async (ctx, args) => {
@@ -83,7 +129,7 @@ export const checkWaterThresholds = internalMutation({
           )
           .first();
         if (!existing) {
-          const alertId = await ctx.db.insert("alerts", {
+          const alertId = await insertAlertWithAI(ctx, {
             societyId: args.societyId,
             blockId: args.blockId,
             utility: "water",
@@ -92,8 +138,6 @@ export const checkWaterThresholds = internalMutation({
             title: `${tank.name} critically low`,
             message: `${tank.name} is at ${tank.currentLevelPct}%. Order tanker immediately.`,
             metadata: { tankId: tank._id, level: tank.currentLevelPct },
-            isResolved: false,
-            triggeredAt: Date.now(),
           });
           await ctx.scheduler.runAfter(
             0,
@@ -141,7 +185,7 @@ export const checkPowerThresholds = internalMutation({
           )
           .first();
         if (!existing) {
-          await ctx.db.insert("alerts", {
+          await insertAlertWithAI(ctx, {
             societyId: args.societyId,
             blockId: args.blockId,
             utility: "power",
@@ -150,8 +194,6 @@ export const checkPowerThresholds = internalMutation({
             title: `${dg.name} diesel low`,
             message: `${dg.name} diesel at ${Math.round(levelPct)}% (${Math.round(dg.dieselLevelLiters)}L). Refuel soon.`,
             metadata: { dgId: dg._id, levelPct: Math.round(levelPct) },
-            isResolved: false,
-            triggeredAt: Date.now(),
           });
           await ctx.scheduler.runAfter(
             0,
@@ -196,7 +238,7 @@ export const checkGasThresholds = internalMutation({
         )
         .first();
       if (!existing) {
-        await ctx.db.insert("alerts", {
+        await insertAlertWithAI(ctx, {
           societyId: args.societyId,
           blockId: args.blockId,
           utility: "gas",
@@ -205,8 +247,6 @@ export const checkGasThresholds = internalMutation({
           title: "Low gas pressure detected",
           message: `Gas pressure is at ${latest.pressurePSI} PSI. Check supply line.`,
           metadata: { pressurePSI: latest.pressurePSI },
-          isResolved: false,
-          triggeredAt: Date.now(),
         });
       }
     }
@@ -237,7 +277,7 @@ export const checkSewageThresholds = internalMutation({
         )
         .first();
       if (!existing) {
-        await ctx.db.insert("alerts", {
+        await insertAlertWithAI(ctx, {
           societyId: args.societyId,
           blockId: args.blockId,
           utility: "sewage",
@@ -246,10 +286,40 @@ export const checkSewageThresholds = internalMutation({
           title: "STP sludge tank near full",
           message: `Sludge tank at ${latest.sludgeTankPct}%. Schedule desludging.`,
           metadata: { sludgeTankPct: latest.sludgeTankPct },
-          isResolved: false,
-          triggeredAt: Date.now(),
         });
       }
+    }
+  },
+});
+
+export const checkGarbageThresholds = internalMutation({
+  args: { societyId: v.id("societies"), blockId: v.id("blocks") },
+  handler: async (ctx, args) => {
+    const overdue = await ctx.db
+      .query("garbageCollectionLog")
+      .withIndex("by_block", (q) =>
+        q.eq("societyId", args.societyId).eq("blockId", args.blockId)
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "pending"),
+          q.lt(q.field("scheduledAt"), Date.now())
+        )
+      )
+      .collect();
+
+    for (const log of overdue) {
+      await ctx.db.patch(log._id, { status: "missed" });
+      await insertAlertWithAI(ctx, {
+        societyId: args.societyId,
+        blockId: args.blockId,
+        utility: "garbage",
+        alertType: "threshold",
+        severity: "warning",
+        title: "Garbage collection missed",
+        message: `Scheduled collection was missed. Contact vendor.`,
+        metadata: { logId: log._id },
+      });
     }
   },
 });
@@ -273,36 +343,41 @@ export const getWeeklyAlertSummary = internalQuery({
   },
 });
 
-export const checkGarbageThresholds = internalMutation({
+// ── Manual: retroactively explain existing alerts ─────────────────────────
+
+export const explainExistingAlerts = mutation({
   args: { societyId: v.id("societies"), blockId: v.id("blocks") },
   handler: async (ctx, args) => {
-    const overdue = await ctx.db
-      .query("garbageCollectionLog")
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+
+    const alerts = await ctx.db
+      .query("alerts")
       .withIndex("by_block", (q) =>
         q.eq("societyId", args.societyId).eq("blockId", args.blockId)
       )
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("status"), "pending"),
-          q.lt(q.field("scheduledAt"), Date.now())
-        )
-      )
+      .filter((q) => q.eq(q.field("isResolved"), false))
       .collect();
 
-    for (const log of overdue) {
-      await ctx.db.patch(log._id, { status: "missed" });
-      await ctx.db.insert("alerts", {
-        societyId: args.societyId,
-        blockId: args.blockId,
-        utility: "garbage",
-        alertType: "threshold",
-        severity: "warning",
-        title: "Garbage collection missed",
-        message: `Scheduled collection was missed. Contact vendor.`,
-        metadata: { logId: log._id },
-        isResolved: false,
-        triggeredAt: Date.now(),
-      });
+    const society = await ctx.db.get(args.societyId);
+    const block = await ctx.db.get(args.blockId);
+
+    let scheduled = 0;
+    for (const alert of alerts) {
+      if (!alert.aiExplanation) {
+        await ctx.scheduler.runAfter(scheduled * 500, internal.ai.explainAlert, {
+          alertId: alert._id,
+          title: alert.title,
+          message: alert.message,
+          utility: alert.utility,
+          severity: alert.severity,
+          metadata: alert.metadata,
+          societyName: society?.name ?? "Unknown",
+          blockName: block?.name ?? "Unknown",
+        });
+        scheduled++;
+      }
     }
+    return { scheduled };
   },
 });

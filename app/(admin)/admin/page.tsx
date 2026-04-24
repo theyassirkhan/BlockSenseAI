@@ -11,7 +11,7 @@ import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { Building2, AlertTriangle, TrendingUp, Activity } from "lucide-react";
 import Link from "next/link";
 import { formatDateTime } from "@/lib/utils";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -25,7 +25,10 @@ export default function AdminPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const setupDemoUser = useMutation(api.demo.setupDemoUser);
+  const seedExtraSocieties = useMutation(api.demo.seedExtraSocieties);
   const setupDone = useRef(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
 
   useEffect(() => {
     const setup = searchParams.get("setup");
@@ -62,7 +65,28 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Platform Overview" subtitle="All societies on BlockSense" />
+      <div className="flex items-center justify-between">
+        <PageHeader title="Platform Overview" subtitle="All societies on BlockSense" />
+        <button
+          disabled={seeding}
+          onClick={async () => {
+            setSeeding(true);
+            setSeedMsg("");
+            try {
+              const r = await seedExtraSocieties({});
+              setSeedMsg((r as any).results?.join(" · ") ?? "Done");
+            } catch (e: any) {
+              setSeedMsg(e.message ?? "Error");
+            } finally {
+              setSeeding(false);
+            }
+          }}
+          className="text-xs px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors disabled:opacity-50"
+        >
+          {seeding ? "Seeding…" : "Seed Extra Societies"}
+        </button>
+      </div>
+      {seedMsg && <p className="text-xs text-muted-foreground">{seedMsg}</p>}
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

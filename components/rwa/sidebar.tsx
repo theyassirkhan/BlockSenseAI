@@ -7,6 +7,7 @@ import {
   Droplets, Zap, Flame, Wind, Trash2, Truck, Users2,
   BellRing, BarChart3, Settings, LayoutDashboard, ChevronLeft,
   Building2, Wrench, CreditCard, Megaphone, TicketCheck, ClipboardList, X,
+  MessageSquareWarning,
 } from "lucide-react";
 
 const NAV = [
@@ -18,6 +19,7 @@ const NAV = [
   { href: "/dashboard/service-requests", label: "Requests", icon: ClipboardList },
   { href: "/dashboard/tickets", label: "Tickets", icon: TicketCheck },
   { href: "/dashboard/broadcasts", label: "Broadcasts", icon: Megaphone },
+  { href: "/dashboard/complaints", label: "Complaints", icon: MessageSquareWarning, color: "#F97316" },
   { href: "/dashboard/alerts", label: "Alerts", icon: BellRing },
   { href: "/dashboard/water", label: "Water", icon: Droplets, color: "#185FA5" },
   { href: "/dashboard/power", label: "Power", icon: Zap, color: "#854F0B" },

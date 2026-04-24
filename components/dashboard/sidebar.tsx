@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   Droplets, Zap, Flame, Wind, Trash2, Truck, Users2,
   BellRing, BarChart3, Settings, LayoutDashboard, ChevronLeft, X,
+  MessageSquareWarning,
 } from "lucide-react";
 
 const NAV = [
@@ -17,6 +18,7 @@ const NAV = [
   { href: "/waste", label: "Waste", icon: Trash2, color: "#993556" },
   { href: "/garbage", label: "Garbage", icon: Truck, color: "#3B6D11" },
   { href: "/staff", label: "Staff", icon: Users2 },
+  { href: "/complaints", label: "Complaints", icon: MessageSquareWarning, color: "#F97316" },
   { href: "/alerts", label: "Alerts", icon: BellRing },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },

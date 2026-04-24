@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BlockSenseAI — The Intelligent Nervous System for Your Society</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4F46E5;
+      --primary-end: #7C3AED;
+      --accent: #06B6D4;
+      --accent-glow: rgba(6, 182, 212, 0.25);
+      --bg: #0A0A0F;
+      --bg-2: #0F0F1A;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(255,255,255,0.08);
+      --text: #F1F5F9;
+      --muted: #94A3B8;
+      --success: #22C55E;
+      --warning: #F59E0B;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Utility ── */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .gradient-text {
+      background: linear-gradient(135deg, #818CF8, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .glass-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+    }
+    section { padding: 100px 0; }
+
+    /* ── Animations ── */
+    .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+    .fade-in-delay-4 { transition-delay: 0.4s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(79,70,229,0.3); }
+      50% { box-shadow: 0 0 40px rgba(79,70,229,0.6); }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    @keyframes count-up { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ── Nav ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 16px 0;
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+    }
+    nav .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #818CF8, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .nav-cta {
+      padding: 8px 20px; border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--primary), var(--primary-end));
+      color: white; text-decoration: none; cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    #hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden; padding: 120px 0 80px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(79,70,229,0.15) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.08) 0%, transparent 60%),
+                  var(--bg);
+    }
+    #hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234F46E5' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .hero-content { text-align: center; position: relative; z-index: 1; }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 100px; margin-bottom: 28px;
+      background: rgba(79,70,229,0.15); border: 1px solid rgba(79,70,229,0.3);
+      font-size: 0.8rem; font-weight: 600; color: #A5B4FC; letter-spacing: 0.5px;
+    }
+    .hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse-glow 2s infinite; }
+
+    h1 {
+      font-size: clamp(2.5rem, 7vw, 5rem);
+      font-weight: 900; letter-spacing: -2px; line-height: 1.05;
+      margin-bottom: 24px;
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem); color: var(--muted); max-width: 560px;
+      margin: 0 auto 44px;
+    }
+
+    .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 72px; }
+
+    .btn-primary {
+      padding: 14px 32px; border-radius: 10px; font-size: 1rem; font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--primary-end));
+      color: white; text-decoration: none; border: none; cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px rgba(79,70,229,0.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(79,70,229,0.5); }
+
+    .btn-ghost {
+      padding: 14px 32px; border-radius: 10px; font-size: 1rem; font-weight: 600;
+      background: transparent; color: var(--text); text-decoration: none;
+      border: 1px solid var(--glass-border); cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-ghost:hover { border-color: rgba(79,70,229,0.5); background: rgba(79,70,229,0.08); }
+
+    /* Floating stat badges */
+    .stat-badges {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    }
+    .stat-badge {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; border-radius: 12px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px); animation: float 4s ease-in-out infinite;
+    }
+    .stat-badge:nth-child(2) { animation-delay: 1.3s; }
+    .stat-badge:nth-child(3) { animation-delay: 2.6s; }
+    .stat-badge-icon { font-size: 1.4rem; }
+    .stat-badge-value { font-size: 1.25rem; font-weight: 800; color: white; }
+    .stat-badge-label { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── Problem ── */
+    #problem { background: var(--bg-2); }
+    .section-eyebrow {
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 12px;
+    }
+    .section-title { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+    .section-sub { font-size: 1.1rem; color: var(--muted); max-width: 560px; }
+
+    .problem-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 60px;
+    }
+    .problem-card {
+      padding: 32px; border-radius: 16px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      position: relative; overflow: hidden;
+    }
+    .problem-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(239,68,68,0.5), transparent);
+    }
+    .problem-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .problem-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .problem-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── Features ── */
+    .features-header { text-align: center; margin-bottom: 60px; }
+    .features-header .section-sub { margin: 0 auto; }
+
+    .feature-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;
+    }
+    .feature-card {
+      padding: 28px; border-radius: 16px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; cursor: default;
+      position: relative; overflow: hidden;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(79,70,229,0.4);
+      box-shadow: 0 12px 40px rgba(79,70,229,0.15);
+    }
+    .feature-card::after {
+      content: ''; position: absolute; inset: 0; border-radius: 16px;
+      background: radial-gradient(circle at 50% 0%, rgba(79,70,229,0.08), transparent 60%);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .feature-card:hover::after { opacity: 1; }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      background: rgba(79,70,229,0.15); font-size: 1.4rem; margin-bottom: 16px;
+    }
+    .feature-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+    .feature-desc { font-size: 0.875rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── How it works ── */
+    #how { background: var(--bg-2); }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 40px; margin-top: 60px; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 40px; left: 16.66%; right: 16.66%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(79,70,229,0.4), rgba(6,182,212,0.4), transparent);
+    }
+    @media (max-width: 768px) { .steps::before { display: none; } }
+    .step { text-align: center; }
+    .step-number {
+      width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--primary), var(--primary-end));
+      box-shadow: 0 0 30px rgba(79,70,229,0.4);
+      position: relative; z-index: 1;
+    }
+    .step-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 0.875rem; color: var(--muted); max-width: 240px; margin: 0 auto; }
+
+    /* ── AI Highlight ── */
+    #ai-section {
+      background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(79,70,229,0.12) 0%, transparent 70%), var(--bg);
+      border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+    }
+    .ai-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    @media (max-width: 900px) { .ai-inner { grid-template-columns: 1fr; gap: 48px; } }
+
+    .ai-content .section-title { max-width: 440px; }
+    .ai-content p { color: var(--muted); margin: 20px 0 32px; font-size: 1.05rem; line-height: 1.8; }
+
+    .ai-features { display: flex; flex-direction: column; gap: 16px; }
+    .ai-feature {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px; border-radius: 12px;
+      background: rgba(79,70,229,0.06); border: 1px solid rgba(79,70,229,0.15);
+    }
+    .ai-feature-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+    .ai-feature-text strong { font-size: 0.9rem; font-weight: 700; display: block; margin-bottom: 2px; }
+    .ai-feature-text span { font-size: 0.8rem; color: var(--muted); }
+
+    /* Mock AI card */
+    .ai-card {
+      padding: 28px; border-radius: 20px;
+      background: rgba(15,15,26,0.9); border: 1px solid rgba(79,70,229,0.3);
+      box-shadow: 0 0 60px rgba(79,70,229,0.15);
+      animation: pulse-glow 4s infinite;
+    }
+    .ai-card-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+      padding-bottom: 16px; border-bottom: 1px solid var(--glass-border);
+    }
+    .ai-card-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--primary), var(--primary-end)); font-size: 1rem; }
+    .ai-card-title { font-size: 0.9rem; font-weight: 700; }
+    .ai-card-sub { font-size: 0.75rem; color: var(--muted); }
+
+    .alert-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600;
+      background: rgba(239,68,68,0.15); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.2);
+      margin-bottom: 12px;
+    }
+    .ai-card p { font-size: 0.875rem; color: #CBD5E1; line-height: 1.8; margin-bottom: 16px; }
+    .ai-card-action {
+      padding: 8px 16px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;
+      background: linear-gradient(135deg, var(--primary), var(--primary-end)); color: white; border: none; cursor: pointer;
+    }
+    .ai-typing { display: flex; gap: 4px; align-items: center; margin-top: 8px; }
+    .ai-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: bounce 1.2s infinite; }
+    .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+    /* ── Stats ── */
+    #stats {
+      padding: 80px 0;
+      background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(6,182,212,0.05));
+      border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border);
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; text-align: center;
+    }
+    .stat-item {}
+    .stat-value { font-size: clamp(2.5rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -2px; }
+    .stat-label { font-size: 0.875rem; color: var(--muted); margin-top: 4px; }
+    .stat-value.counting { color: white; }
+
+    /* ── Testimonial ── */
+    #testimonial { background: var(--bg-2); padding: 100px 0; }
+    .testimonial-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+    .quote-icon { font-size: 3rem; color: var(--primary); opacity: 0.4; margin-bottom: 24px; line-height: 1; }
+    .quote-text { font-size: clamp(1.1rem, 2.5vw, 1.4rem); font-weight: 500; line-height: 1.8; color: var(--text); margin-bottom: 32px; }
+    .quote-author { display: flex; align-items: center; gap: 16px; justify-content: center; }
+    .author-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-end));
+      display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+    }
+    .author-name { font-weight: 700; font-size: 0.95rem; }
+    .author-role { font-size: 0.8rem; color: var(--muted); }
+    .stars { color: #F59E0B; font-size: 1rem; letter-spacing: 2px; margin-bottom: 4px; }
+
+    /* ── CTA Footer ── */
+    footer {
+      padding: 100px 0 60px;
+      background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(79,70,229,0.12) 0%, transparent 70%), var(--bg);
+      text-align: center;
+    }
+    footer h2 { font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 900; letter-spacing: -1px; margin-bottom: 16px; }
+    footer p { color: var(--muted); margin-bottom: 40px; font-size: 1.05rem; }
+    .footer-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 64px; }
+    .footer-divider { height: 1px; background: var(--glass-border); margin-bottom: 40px; }
+    .footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: gap; gap: 16px; }
+    .footer-logo { font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, #818CF8, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .footer-copy { font-size: 0.8rem; color: var(--muted); }
+
+    /* QR section */
+    .qr-section { text-align: center; margin-top: 60px; }
+    .qr-section p { color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+    .qr-wrap {
+      display: inline-flex; flex-direction: column; align-items: center; gap: 16px;
+      padding: 28px 32px; border-radius: 20px;
+      background: var(--glass); border: 1px solid var(--glass-border);
+    }
+    .qr-wrap img { width: 160px; height: 160px; border-radius: 12px; display: block; background: white; padding: 8px; }
+    .qr-label { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.5px; }
+    .qr-url { font-size: 0.75rem; color: var(--accent); word-break: break-all; max-width: 200px; }
+
+    /* ── Print ── */
+    @media print {
+      nav { display: none; }
+      .fade-in { opacity: 1 !important; transform: none !important; }
+      .stat-badge, .ai-card { animation: none !important; }
+      * { transition: none !important; }
+    }
+
+    /* ── Responsive tweaks ── */
+    @media (max-width: 640px) {
+      section { padding: 72px 0; }
+      .hero-actions { flex-direction: column; align-items: center; }
+      .btn-primary, .btn-ghost { width: 100%; max-width: 280px; text-align: center; }
+      .steps::before { display: none; }
+      .footer-bottom { flex-direction: column; text-align: center; }
+    }
+
+    /* Animated gradient border on hero */
+    .hero-glow {
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(79,70,229,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <div class="container nav-inner">
+      <span class="nav-logo">⬡ BlockSenseAI</span>
+      <a href="#cta" class="nav-cta">Request Demo</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero">
+    <div class="hero-glow"></div>
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-badge fade-in">
+          <span class="hero-badge-dot"></span>
+          NOW POWERED BY CLAUDE AI
+        </div>
+        <h1 class="fade-in fade-in-delay-1">
+          The Intelligent<br /><span class="gradient-text">Nervous System</span><br />for Your Society
+        </h1>
+        <p class="hero-sub fade-in fade-in-delay-2">
+          BlockSenseAI unifies utility monitoring, resident management, security, and AI-powered insights — giving your RWA total visibility and control in real time.
+        </p>
+        <div class="hero-actions fade-in fade-in-delay-3">
+          <a href="#cta" class="btn-primary">Request a Demo →</a>
+          <a href="#features" class="btn-ghost">Explore Features</a>
+        </div>
+        <div class="stat-badges fade-in fade-in-delay-4">
+          <div class="stat-badge">
+            <span class="stat-badge-icon">✅</span>
+            <div>
+              <div class="stat-badge-value">94%</div>
+              <div class="stat-badge-label">Alert Resolution Rate</div>
+            </div>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-badge-icon">⚡</span>
+            <div>
+              <div class="stat-badge-value">2.3s</div>
+              <div class="stat-badge-label">Avg AI Response</div>
+            </div>
+          </div>
+          <div class="stat-badge">
+            <span class="stat-badge-icon">🏢</span>
+            <div>
+              <div class="stat-badge-value">500+</div>
+              <div class="stat-badge-label">Societies Managed</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem -->
+  <section id="problem">
+    <div class="container">
+      <div class="fade-in">
+        <div class="section-eyebrow">The Problem</div>
+        <h2 class="section-title">Society management is broken</h2>
+        <p class="section-sub">Most RWAs still rely on spreadsheets, WhatsApp groups, and manual processes that let critical issues slip through.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="problem-card fade-in fade-in-delay-1">
+          <div class="problem-icon">📋</div>
+          <div class="problem-title">Manual Ledgers & Missed Payments</div>
+          <div class="problem-desc">Paper-based maintenance tracking leads to billing errors, delayed follow-ups, and cash flow gaps that compound over time.</div>
+        </div>
+        <div class="problem-card fade-in fade-in-delay-2">
+          <div class="problem-icon">🚨</div>
+          <div class="problem-title">Silent Infrastructure Failures</div>
+          <div class="problem-desc">Water pump failures, power outages, and gas leaks go undetected until residents complain — costing thousands in repairs and trust.</div>
+        </div>
+        <div class="problem-card fade-in fade-in-delay-3">
+          <div class="problem-icon">😤</div>
+          <div class="problem-title">Resident Frustration</div>
+          <div class="problem-desc">No visibility into complaint status, no digital receipts, no self-service portal — leading to endless calls to the secretary's personal phone.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="container">
+      <div class="features-header fade-in">
+        <div class="section-eyebrow">What We Offer</div>
+        <h2 class="section-title">Everything your society needs</h2>
+        <p class="section-sub">Eight integrated modules working in harmony — so your team never needs another tool.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card fade-in fade-in-delay-1">
+          <div class="feature-icon">🤖</div>
+          <div class="feature-title">AI-Powered Alerts</div>
+          <div class="feature-desc">Claude AI explains every anomaly in plain English and predicts failures before they happen.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-2">
+          <div class="feature-icon">📊</div>
+          <div class="feature-title">Utility Monitoring</div>
+          <div class="feature-desc">Real-time water, electricity, and gas tracking with letter-grade health scores and trend charts.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-3">
+          <div class="feature-icon">🏠</div>
+          <div class="feature-title">Resident Portal</div>
+          <div class="feature-desc">Digital payments, complaint tracking, visitor management, and vehicle registry — all in one app.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-4">
+          <div class="feature-icon">📣</div>
+          <div class="feature-title">Smart Broadcasts</div>
+          <div class="feature-desc">One-tap announcements reach every resident instantly with delivery confirmation.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-1">
+          <div class="feature-icon">♻️</div>
+          <div class="feature-title">Waste Management</div>
+          <div class="feature-desc">Scheduled pickups, driver tracking, and route optimization reduce missed collections by 80%.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-2">
+          <div class="feature-icon">📈</div>
+          <div class="feature-title">Reports & Analytics</div>
+          <div class="feature-desc">Auto-generated PDF reports, occupancy stats, financial summaries, and custom dashboards.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-3">
+          <div class="feature-icon">👥</div>
+          <div class="feature-title">Multi-Role Access</div>
+          <div class="feature-desc">Tailored dashboards for RWA admins, residents, security guards, and maintenance staff.</div>
+        </div>
+        <div class="feature-card fade-in fade-in-delay-4">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-title">Visitor Security</div>
+          <div class="feature-desc">Guard check-in, visitor pre-approval, and real-time entry logs keep your society secure.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how">
+    <div class="container">
+      <div class="features-header fade-in">
+        <div class="section-eyebrow">How It Works</div>
+        <h2 class="section-title">Up and running in 3 steps</h2>
+        <p class="section-sub">No lengthy onboarding. No IT department required. Most societies are live within a week.</p>
+      </div>
+      <div class="steps">
+        <div class="step fade-in fade-in-delay-1">
+          <div class="step-number">1</div>
+          <div class="step-title">Deploy</div>
+          <div class="step-desc">We set up your society's account, onboard residents, and configure your block structure in under a day.</div>
+        </div>
+        <div class="step fade-in fade-in-delay-2">
+          <div class="step-number">2</div>
+          <div class="step-title">Connect</div>
+          <div class="step-desc">Utility meters, payment gateways, and communication channels are wired together on our secure platform.</div>
+        </div>
+        <div class="step fade-in fade-in-delay-3">
+          <div class="step-number">3</div>
+          <div class="step-title">Automate</div>
+          <div class="step-desc">AI takes over routine monitoring, alerts, and reports — your team focuses on decisions, not data entry.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Highlight -->
+  <section id="ai-section">
+    <div class="container">
+      <div class="ai-inner">
+        <div class="ai-content fade-in">
+          <div class="section-eyebrow">Claude AI Integration</div>
+          <h2 class="section-title">Your society's AI analyst, always on call</h2>
+          <p>BlockSenseAI is powered by Anthropic's Claude — one of the world's most capable AI models. Instead of raw data, you get plain-English explanations, root-cause analysis, and proactive recommendations delivered instantly.</p>
+          <div class="ai-features">
+            <div class="ai-feature">
+              <span class="ai-feature-icon">🔍</span>
+              <div class="ai-feature-text">
+                <strong>Anomaly Explanation</strong>
+                <span>Claude reads every alert and explains what happened, why it matters, and what to do next.</span>
+              </div>
+            </div>
+            <div class="ai-feature">
+              <span class="ai-feature-icon">🔮</span>
+              <div class="ai-feature-text">
+                <strong>Predictive Maintenance</strong>
+                <span>Pattern recognition across utility trends flags equipment degradation weeks before failure.</span>
+              </div>
+            </div>
+            <div class="ai-feature">
+              <span class="ai-feature-icon">📝</span>
+              <div class="ai-feature-text">
+                <strong>Auto-Generated Reports</strong>
+                <span>Monthly summaries written in clear language — ready to present to the general body.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ai-card fade-in fade-in-delay-2">
+          <div class="ai-card-header">
+            <div class="ai-card-dot">✦</div>
+            <div>
+              <div class="ai-card-title">AI Alert Analysis</div>
+              <div class="ai-card-sub">Block B — Water Pump · Just now</div>
+            </div>
+          </div>
+          <div>
+            <div class="alert-badge">⚠ HIGH SEVERITY</div>
+            <p><strong style="color:white;">Unusual water pressure drop detected on Block B riser (−34% from baseline)</strong></p>
+            <p>This pattern is consistent with a partial blockage in the 4-inch main riser or a failing pressure valve. Based on historical data from similar incidents, I estimate a full blockage within 48–72 hours if unaddressed. I recommend dispatching the plumber to inspect the valve on Level 3 as a priority.</p>
+          </div>
+          <button class="ai-card-action">Dispatch Maintenance →</button>
+          <div class="ai-typing" style="margin-top:12px;opacity:0.5;">
+            <div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div>
+            <span style="font-size:0.75rem;color:var(--muted);margin-left:6px;">Claude is monitoring…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section id="stats">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item fade-in">
+          <div class="stat-value gradient-text" data-target="500" data-suffix="+">0+</div>
+          <div class="stat-label">Societies Managed</div>
+        </div>
+        <div class="stat-item fade-in fade-in-delay-1">
+          <div class="stat-value gradient-text" data-target="98000" data-suffix="+">0+</div>
+          <div class="stat-label">Alerts Resolved</div>
+        </div>
+        <div class="stat-item fade-in fade-in-delay-2">
+          <div class="stat-value gradient-text" data-target="97" data-suffix="%">0%</div>
+          <div class="stat-label">Resident Satisfaction</div>
+        </div>
+        <div class="stat-item fade-in fade-in-delay-3">
+          <div class="stat-value gradient-text" data-target="99.9" data-suffix="%" data-float="true">0%</div>
+          <div class="stat-label">Platform Uptime</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonial -->
+  <section id="testimonial">
+    <div class="container">
+      <div class="testimonial-inner fade-in">
+        <div class="quote-icon">"</div>
+        <p class="quote-text">Before BlockSenseAI, I was spending 3 hours every week on WhatsApp chasing maintenance updates and collecting manual payment confirmations. Now everything is automated — I check my dashboard once in the morning and the entire society runs itself. The AI alerts alone have saved us from two major pump failures this year.</p>
+        <div class="quote-author">
+          <div class="author-avatar">👩</div>
+          <div>
+            <div class="stars">★★★★★</div>
+            <div class="author-name">Priya Sharma</div>
+            <div class="author-role">Secretary, Greenview Heights RWA · Bangalore</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Footer -->
+  <footer id="cta">
+    <div class="container">
+      <div class="fade-in">
+        <div class="section-eyebrow">Get Started</div>
+        <h2>Ready to transform your society?</h2>
+        <p>Scan the QR code to try the app instantly — no install required.</p>
+        <div class="qr-section">
+          <div class="qr-wrap">
+            <img
+              src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=0&data=https%3A%2F%2Fblock-sense-ai-mobile-muhammedyassirkhan-6475s-projects.vercel.app%2Flogin"
+              alt="Scan to open BlockSenseAI app"
+              loading="lazy"
+            />
+            <span class="qr-label">SCAN TO OPEN THE APP</span>
+            <span class="qr-url">block-sense-ai-mobile…vercel.app</span>
+          </div>
+        </div>
+      </div>
+      <div class="footer-divider" style="margin-top:60px;"></div>
+      <div class="footer-bottom">
+        <span class="footer-logo">⬡ BlockSenseAI</span>
+        <span class="footer-copy">© 2025 BlockSenseAI. All rights reserved.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ── Intersection Observer fade-in ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ── Animated counters ──
+    function animateCounter(el) {
+      const target = parseFloat(el.dataset.target);
+      const suffix = el.dataset.suffix || '';
+      const isFloat = el.dataset.float === 'true';
+      const duration = 1800;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = target * eased;
+        el.textContent = (isFloat ? current.toFixed(1) : Math.floor(current).toLocaleString()) + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('[data-target]').forEach(animateCounter);
+          statObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const statsSection = document.getElementById('stats');
+    if (statsSection) statObserver.observe(statsSection);
+  </script>
+</body>
+</html>
