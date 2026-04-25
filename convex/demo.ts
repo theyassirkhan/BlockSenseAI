@@ -68,14 +68,29 @@ export const setupDemoUser = mutation({
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
       .first();
 
-    const roleNames = { admin: "Demo Admin", rwa: "Arun Sharma", resident: "Priya Menon", guard: "Ramesh Kumar" };
+    // Pick a name seeded from the authId so the same session always gets the same name
+    const seed = (authId as string).charCodeAt(0) + (authId as string).charCodeAt(1);
+    const ADMIN_NAMES = ["Rajesh Srinivasan", "Anand Mehta", "Vikram Bhatia", "Suresh Agarwal", "Karthik Nair", "Deepak Pillai", "Manohar Joshi", "Arvind Kumar"];
+    const RWA_NAMES = ["Arun Sharma", "Prakash Bapat", "Milind Joshi", "Soumitra Dutta", "Venkatesh Reddy", "Anil Kapoor", "Subramaniam Pillai"];
+    const RESIDENT_NAMES = ["Priya Menon", "Kavitha Reddy", "Sunita Krishnan", "Rekha Nair", "Deepa Sharma", "Meena Iyer", "Usha Rani", "Ananya Chakraborty"];
+    const GUARD_NAMES = ["Ramesh Kumar", "Abdul Kalam", "Santhosh P", "Mohan Das", "Raju S", "Sundar V", "Bharat K"];
+    const PHONE_PREFIXES = ["98450", "98451", "98452", "98453", "98454", "97310", "97311", "97312"];
+    const phoneBase = PHONE_PREFIXES[seed % PHONE_PREFIXES.length] + String(10000 + (seed * 137) % 90000).slice(0, 5);
+    const phone = `+91${phoneBase}`;
+    const roleNameMap = {
+      admin: ADMIN_NAMES[seed % ADMIN_NAMES.length],
+      rwa: RWA_NAMES[seed % RWA_NAMES.length],
+      resident: RESIDENT_NAMES[seed % RESIDENT_NAMES.length],
+      guard: GUARD_NAMES[seed % GUARD_NAMES.length],
+    };
     const flatNumbers: Record<string, string | undefined> = { admin: undefined, rwa: undefined, resident: "A-204", guard: undefined };
     // "guard" is a UI-only demo alias — store as "staff" in the DB
     const dbRole = args.role === "guard" ? "staff" : args.role;
 
     if (existingUser) {
       await ctx.db.patch(existingUser._id, {
-        name: roleNames[args.role],
+        name: roleNameMap[args.role],
+        phone,
         role: dbRole,
         societyId: society!._id,
         blockId: block!._id,
@@ -86,7 +101,8 @@ export const setupDemoUser = mutation({
     } else {
       await ctx.db.insert("users", {
         tokenIdentifier: authId as string,
-        name: roleNames[args.role],
+        name: roleNameMap[args.role],
+        phone,
         role: dbRole,
         societyId: society!._id,
         blockId: block!._id,
@@ -1115,6 +1131,22 @@ export const seedExtraSocieties = mutation({
     }
 
     return { results };
+  },
+});
+
+export const wipeDemoNamedUsers = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const DEMO_NAMES = ["Demo Admin", "Demo RWA Manager", "Demo Resident", "Demo Guard", "Demo Staff"];
+    const all = await ctx.db.query("users").collect();
+    let deleted = 0;
+    for (const u of all) {
+      if (u.name && DEMO_NAMES.some(d => u.name!.startsWith(d))) {
+        await ctx.db.delete(u._id);
+        deleted++;
+      }
+    }
+    return { deleted };
   },
 });
 
