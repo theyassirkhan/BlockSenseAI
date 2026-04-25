@@ -13,12 +13,19 @@ export const listAllInternal = internalQuery({
   handler: async (ctx) => ctx.db.query("societies").collect(),
 });
 
-// Public version (platform admin queries)
+// Public version (platform admin + society admin queries)
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) throw new Error("Unauthenticated");
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!caller || (caller.role !== "admin" && caller.role !== "platform_admin")) {
+      throw new Error("Forbidden: only admins can list all societies");
+    }
     return ctx.db.query("societies").collect();
   },
 });

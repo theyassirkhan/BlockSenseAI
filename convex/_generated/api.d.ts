@@ -16,6 +16,7 @@ import type * as broadcastsService from "../broadcastsService.js";
 import type * as complaints from "../complaints.js";
 import type * as crons from "../crons.js";
 import type * as demo from "../demo.js";
+import type * as email from "../email.js";
 import type * as garbage from "../garbage.js";
 import type * as gas from "../gas.js";
 import type * as http from "../http.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   complaints: typeof complaints;
   crons: typeof crons;
   demo: typeof demo;
+  email: typeof email;
   garbage: typeof garbage;
   gas: typeof gas;
   http: typeof http;

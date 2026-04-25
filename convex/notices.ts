@@ -2,6 +2,20 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+async function requireRwaOrAdmin(ctx: any) {
+  const authId = await getAuthUserId(ctx);
+  if (!authId) throw new Error("Unauthenticated");
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", authId as string))
+    .first();
+  if (!user) throw new Error("Profile not found");
+  if (user.role !== "rwa" && user.role !== "admin" && user.role !== "platform_admin") {
+    throw new Error("Forbidden: only RWA managers and admins can manage notices");
+  }
+  return user;
+}
+
 export const create = mutation({
   args: {
     societyId: v.id("societies"),
@@ -18,13 +32,7 @@ export const create = mutation({
     isPinned: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
-      .first();
-    if (!user) throw new Error("Profile not found");
+    const user = await requireRwaOrAdmin(ctx);
     return ctx.db.insert("notices", {
       ...args,
       isPinned: args.isPinned ?? false,
@@ -61,8 +69,13 @@ export const getBySociety = query({
 export const remove = mutation({
   args: { noticeId: v.id("notices") },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
+    const user = await requireRwaOrAdmin(ctx);
+    const notice = await ctx.db.get(args.noticeId);
+    if (!notice) throw new Error("Notice not found");
+    // Verify caller belongs to the same society as the notice
+    if (user.societyId !== notice.societyId) {
+      throw new Error("Forbidden: this notice does not belong to your society");
+    }
     await ctx.db.delete(args.noticeId);
   },
 });
@@ -121,8 +134,12 @@ export const update = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
+    const user = await requireRwaOrAdmin(ctx);
+    const notice = await ctx.db.get(args.noticeId);
+    if (!notice) throw new Error("Notice not found");
+    if (user.societyId !== notice.societyId) {
+      throw new Error("Forbidden: this notice does not belong to your society");
+    }
     const { noticeId, ...patch } = args;
     await ctx.db.patch(noticeId, patch);
   },

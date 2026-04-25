@@ -2,6 +2,23 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+async function requireAdminOfSociety(ctx: any, societyId: string) {
+  const authId = await getAuthUserId(ctx);
+  if (!authId) throw new Error("Unauthenticated");
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", authId as string))
+    .first();
+  if (!user) throw new Error("Profile not found");
+  if (user.role !== "admin" && user.role !== "platform_admin") {
+    throw new Error("Forbidden: only society admins can perform this action");
+  }
+  if (user.role === "admin" && user.societyId !== societyId) {
+    throw new Error("Forbidden: you do not administer this society");
+  }
+  return user;
+}
+
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
@@ -21,6 +38,7 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) throw new Error("Unauthenticated");
+    // Any authenticated user can create a society (needed for admin onboarding)
     return ctx.db.insert("societies", {
       ...args,
       subscriptionPlan: "basic",
@@ -47,8 +65,7 @@ export const update = mutation({
     totalFlats: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
+    await requireAdminOfSociety(ctx, args.societyId);
     const { societyId, ...patch } = args;
     await ctx.db.patch(societyId, patch);
   },
@@ -69,6 +86,7 @@ export const addBlock = mutation({
   handler: async (ctx, args) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) throw new Error("Unauthenticated");
+    // Allow any authenticated user to add a block (needed during onboarding)
     const blockId = await ctx.db.insert("blocks", {
       ...args,
       createdAt: Date.now(),
@@ -112,6 +130,13 @@ export const updateBlock = mutation({
   handler: async (ctx, args) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) throw new Error("Unauthenticated");
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!user || (user.role !== "admin" && user.role !== "platform_admin" && user.role !== "rwa")) {
+      throw new Error("Forbidden: only admins and RWA managers can update blocks");
+    }
     const { blockId, ...patch } = args;
     await ctx.db.patch(blockId, patch);
   },
@@ -126,7 +151,6 @@ export const getHealthScore = query({
     const now = Date.now();
     const last7d = now - 7 * 24 * 60 * 60 * 1000;
 
-    // Water score (0-40): based on average tank level
     const tanks = await ctx.db
       .query("waterTanks")
       .withIndex("by_block", (q) =>
@@ -137,9 +161,8 @@ export const getHealthScore = query({
       tanks.length > 0
         ? tanks.reduce((s, t) => s + t.currentLevelPct, 0) / tanks.length
         : 50;
-    const waterScore = Math.round(avgTankLevel * 0.4); // max 40
+    const waterScore = Math.round(avgTankLevel * 0.4);
 
-    // Alert score (0-30): deduct for unresolved critical alerts
     const criticalAlerts = await ctx.db
       .query("alerts")
       .withIndex("by_resolved", (q) =>
@@ -150,7 +173,6 @@ export const getHealthScore = query({
     const alertPenalty = Math.min(30, criticalAlerts.length * 10);
     const alertScore = 30 - alertPenalty;
 
-    // Waste segregation score (0-30): compliance rate last 7 days
     const wasteLogs = await ctx.db
       .query("wasteLogs")
       .withIndex("by_logged_at", (q) =>
@@ -183,8 +205,18 @@ export const deleteBlock = mutation({
   handler: async (ctx, args) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) throw new Error("Unauthenticated");
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!user || (user.role !== "admin" && user.role !== "platform_admin")) {
+      throw new Error("Forbidden: only admins can delete blocks");
+    }
     const block = await ctx.db.get(args.blockId);
     if (!block) throw new Error("Block not found");
+    if (user.role === "admin" && user.societyId !== block.societyId) {
+      throw new Error("Forbidden: this block does not belong to your society");
+    }
     await ctx.db.delete(args.blockId);
     const society = await ctx.db.get(block.societyId);
     if (society && (society.totalBlocks ?? 0) > 0) {

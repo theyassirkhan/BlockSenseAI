@@ -77,6 +77,19 @@ export const respond = mutation({
   handler: async (ctx, args) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) throw new Error("Unauthenticated");
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!user) throw new Error("Profile not found");
+    if (user.role !== "rwa" && user.role !== "admin" && user.role !== "platform_admin") {
+      throw new Error("Forbidden: only RWA managers and admins can respond to complaints");
+    }
+    const complaint = await ctx.db.get(args.complaintId);
+    if (!complaint) throw new Error("Complaint not found");
+    if (user.societyId !== complaint.societyId) {
+      throw new Error("Forbidden: this complaint does not belong to your society");
+    }
     await ctx.db.patch(args.complaintId, {
       rwaResponse: args.rwaResponse,
       status: args.status,

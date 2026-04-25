@@ -26,6 +26,19 @@ export const create = mutation({
   handler: async (ctx, args) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Unauthenticated");
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", userId as string))
+      .first();
+    if (!caller) throw new Error("Profile not found");
+    // Only RWA or admin can create invites
+    if (caller.role !== "rwa" && caller.role !== "admin" && caller.role !== "platform_admin") {
+      throw new Error("Forbidden: only RWA managers and admins can create invites");
+    }
+    // Caller can only invite to their own society
+    if (caller.role !== "platform_admin" && caller.societyId !== args.societyId) {
+      throw new Error("Forbidden: you can only invite to your own society");
+    }
     const token = randomToken();
     const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
     const id = await ctx.db.insert("invites", {
@@ -81,6 +94,12 @@ export const listBySociety = query({
   handler: async (ctx, { societyId }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", userId as string))
+      .first();
+    if (!caller) return [];
+    if (caller.role !== "rwa" && caller.role !== "admin" && caller.role !== "platform_admin") return [];
     const rows = await ctx.db
       .query("invites")
       .withIndex("by_society", q => q.eq("societyId", societyId))
@@ -95,6 +114,19 @@ export const revoke = mutation({
   handler: async (ctx, { inviteId }) => {
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Unauthenticated");
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", userId as string))
+      .first();
+    if (!caller) throw new Error("Profile not found");
+    if (caller.role !== "rwa" && caller.role !== "admin" && caller.role !== "platform_admin") {
+      throw new Error("Forbidden: only RWA managers and admins can revoke invites");
+    }
+    const invite = await ctx.db.get(inviteId);
+    if (!invite) throw new Error("Invite not found");
+    if (caller.role !== "platform_admin" && caller.societyId !== invite.societyId) {
+      throw new Error("Forbidden: this invite does not belong to your society");
+    }
     await ctx.db.patch(inviteId, { usedAt: Date.now() });
   },
 });

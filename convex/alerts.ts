@@ -93,9 +93,13 @@ export const resolveAlert = mutation({
       .query("users")
       .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
       .first();
+    if (!user) throw new Error("Profile not found");
+    if (user.role !== "rwa" && user.role !== "admin" && user.role !== "platform_admin") {
+      throw new Error("Forbidden: only RWA managers and admins can resolve alerts");
+    }
     await ctx.db.patch(args.alertId, {
       isResolved: true,
-      resolvedBy: user?._id,
+      resolvedBy: user._id,
       resolvedAt: Date.now(),
     });
   },

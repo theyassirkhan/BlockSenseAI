@@ -2,6 +2,20 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
+async function requireRwaOrAdmin(ctx: any) {
+  const authId = await getAuthUserId(ctx);
+  if (!authId) throw new Error("Unauthenticated");
+  const user = await ctx.db
+    .query("users")
+    .withIndex("by_token", (q: any) => q.eq("tokenIdentifier", authId as string))
+    .first();
+  if (!user) throw new Error("Profile not found");
+  if (user.role !== "rwa" && user.role !== "admin" && user.role !== "platform_admin") {
+    throw new Error("Forbidden: only RWA managers and admins can perform this action");
+  }
+  return user;
+}
+
 export const getMyDues = query({
   args: { societyId: v.id("societies") },
   handler: async (ctx, args) => {
@@ -68,8 +82,7 @@ export const recordPayment = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
+    await requireRwaOrAdmin(ctx);
     return ctx.db.insert("payments", {
       ...args,
       status: "pending",
@@ -89,17 +102,12 @@ export const confirmPayment = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
-      .first();
+    const user = await requireRwaOrAdmin(ctx);
     await ctx.db.patch(args.paymentId, {
       status: "confirmed",
       paidAt: Date.now(),
       paymentMethod: args.paymentMethod,
-      confirmedBy: user?._id,
+      confirmedBy: user._id,
     });
   },
 });
@@ -141,8 +149,11 @@ export const setMaintenanceCharge = mutation({
     lateFeeType: v.optional(v.union(v.literal("flat"), v.literal("percentage"))),
   },
   handler: async (ctx, args) => {
-    const authId = await getAuthUserId(ctx);
-    if (!authId) throw new Error("Unauthenticated");
+    const user = await requireRwaOrAdmin(ctx);
+    // Caller must belong to the same society
+    if (user.societyId !== args.societyId) {
+      throw new Error("Forbidden: you do not manage this society");
+    }
     const existing = await ctx.db
       .query("maintenanceCharges")
       .withIndex("by_society", (q) => q.eq("societyId", args.societyId))

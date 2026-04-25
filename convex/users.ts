@@ -44,11 +44,19 @@ export const createProfile = mutation({
 
     const existing = await ctx.db
       .query("users")
-      .withIndex("by_token", (q) =>
-        q.eq("tokenIdentifier", authId as string)
-      )
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
       .first();
     if (existing) return existing._id;
+
+    // Prevent privilege escalation: admin role requires no existing admin for that society
+    if (args.role === "admin" && args.societyId) {
+      const existingAdmin = await ctx.db
+        .query("users")
+        .withIndex("by_society", (q) => q.eq("societyId", args.societyId!))
+        .filter((q) => q.eq(q.field("role"), "admin"))
+        .first();
+      if (existingAdmin) throw new Error("This society already has an admin. Contact your society admin to get access.");
+    }
 
     return ctx.db.insert("users", {
       ...args,
@@ -214,6 +222,11 @@ export const listAll = query({
   handler: async (ctx) => {
     const authId = await getAuthUserId(ctx);
     if (!authId) return [];
+    const caller = await ctx.db
+      .query("users")
+      .withIndex("by_token", (q) => q.eq("tokenIdentifier", authId as string))
+      .first();
+    if (!caller || (caller.role !== "admin" && caller.role !== "platform_admin")) return [];
     return ctx.db.query("users").take(500);
   },
 });
