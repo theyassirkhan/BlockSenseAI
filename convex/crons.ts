@@ -31,4 +31,11 @@ crons.weekly(
   internal.notifications.sendWeeklyDigest
 );
 
+// Weekly wipe of anonymous demo session users (Sunday midnight UTC)
+crons.weekly(
+  "weekly demo wipe",
+  { dayOfWeek: "sunday", hourUTC: 0, minuteUTC: 0 },
+  internal.demo.wipeDemoNamedUsersInternal
+);
+
 export default crons;

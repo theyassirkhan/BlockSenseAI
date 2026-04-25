@@ -135,6 +135,18 @@ export const notifyResidentCheckIn = internalAction({
     const apiKey = process.env.MSG91_API_KEY;
     const waNumber = process.env.MSG91_WHATSAPP_NUMBER;
 
+    // Email fallback — always attempt if resident has email
+    if (resident.email) {
+      await ctx.runAction(internal.email.sendVisitorArrivalEmail, {
+        residentEmail: resident.email,
+        residentName: resident.name ?? "Resident",
+        visitorName: args.visitorName,
+        visitorPhone: "",
+        flatNumber: resident.flatNumber ?? "",
+        societyName: "your society",
+      }).catch(() => {});
+    }
+
     if (resident.whatsapp && apiKey && waNumber) {
       const phone = resident.whatsapp.replace(/\D/g, "");
       await fetch("https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/bulk/", {

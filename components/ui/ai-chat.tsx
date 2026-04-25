@@ -73,7 +73,7 @@ export function AiChat({ societyId, blockId, residentName, flatNumber, societyNa
       setMessages(prev => [...prev, { role: "ai", text: res.reply, ts: Date.now() }]);
     } catch (err) {
       console.error("[AiChat] residentChat failed:", err);
-      const isConfig = err instanceof Error && err.message.includes("ANTHROPIC_API_KEY");
+      const isConfig = err instanceof Error && err.message.includes("GOOGLE_AI_API_KEY");
       setMessages(prev => [...prev, {
         role: "ai",
         text: isConfig
