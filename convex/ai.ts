@@ -1,31 +1,28 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { action, internalAction, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
 function getClient() {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) throw new Error("ANTHROPIC_API_KEY not set in Convex env");
-  return new Anthropic({ apiKey: key });
+  const key = process.env.GOOGLE_AI_API_KEY;
+  if (!key) throw new Error("GOOGLE_AI_API_KEY not set in Convex env");
+  return new GoogleGenerativeAI(key);
 }
 
 // ── Core call ──────────────────────────────────────────────────────────────
 
-async function claudeText(
+async function geminiText(
   systemPrompt: string,
   userMessage: string,
-  model: "claude-haiku-4-5-20251001" | "claude-sonnet-4-6" = "claude-haiku-4-5-20251001"
+  model: "gemini-1.5-flash" | "gemini-1.5-pro" = "gemini-1.5-flash"
 ): Promise<string> {
-  const client = getClient();
-  const response = await client.messages.create({
+  const genAI = getClient();
+  const geminiModel = genAI.getGenerativeModel({
     model,
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }],
+    systemInstruction: systemPrompt,
   });
-  const block = response.content[0];
-  if (block.type !== "text") throw new Error("Unexpected response type");
-  return block.text.trim();
+  const result = await geminiModel.generateContent(userMessage);
+  return result.response.text().trim();
 }
 
 // ── Internal mutation: write AI explanation to alert ──────────────────────
@@ -51,7 +48,7 @@ export const explainAlert = internalAction({
     blockName: v.string(),
   },
   handler: async (ctx, args) => {
-    const explanation = await claudeText(
+    const explanation = await geminiText(
       `You are an expert facilities manager for Indian housing societies.
 Explain utility alerts clearly and suggest immediate actions.
 Be concise (3-4 sentences). Write in plain English.
@@ -79,7 +76,7 @@ export const draftBroadcast = action({
     type: v.string(),
   },
   handler: async (_ctx, args) => {
-    const draft = await claudeText(
+    const draft = await geminiText(
       `You are the secretary of an Indian residential housing society named "${args.societyName}".
 Write professional, polite notice announcements for residents.
 Rules:
@@ -109,7 +106,7 @@ export const generateMonthlyNarrative = internalAction({
     serviceData: v.string(),
   },
   handler: async (_ctx, args) => {
-    const narrative = await claudeText(
+    const narrative = await geminiText(
       `You are a smart facility management AI writing a monthly report for an Indian housing society.
 Write a concise executive summary (5-7 sentences) covering:
 1. Overall performance this month
@@ -124,7 +121,7 @@ Power: ${args.powerData}
 Payments: ${args.paymentData}
 Alerts: ${args.alertData}
 Service Requests: ${args.serviceData}`,
-      "claude-sonnet-4-6"
+      "gemini-1.5-pro"
     );
     return { narrative };
   },
@@ -141,7 +138,7 @@ export const residentChat = action({
     context: v.string(),
   },
   handler: async (_ctx, args) => {
-    const reply = await claudeText(
+    const reply = await geminiText(
       `You are BlockSense AI Assistant for ${args.societyName} housing society.
 Help residents with information about their society.
 Be helpful, concise, and friendly. Keep replies under 60 words.
@@ -173,7 +170,7 @@ export const predictTankerNeed = internalAction({
     const daysRemaining = args.avgDailyConsumptionKL > 0
       ? Math.floor(args.currentLevelKL / args.avgDailyConsumptionKL)
       : 99;
-    const recommendation = await claudeText(
+    const recommendation = await geminiText(
       `You are a water management assistant for an Indian housing society.
 Give a short, practical recommendation in 2 sentences max. No markdown.`,
       `Society: ${args.societyName}, Block: ${args.blockName}
@@ -193,7 +190,7 @@ export const vendorIntelligence = action({
     vendorData: v.string(),
   },
   handler: async (_ctx, args) => {
-    const insight = await claudeText(
+    const insight = await geminiText(
       `You are a procurement advisor for Indian housing societies.
 Analyze vendor spending and give 2-3 actionable insights.
 Focus on cost savings, underperforming vendors, negotiation opportunities.
