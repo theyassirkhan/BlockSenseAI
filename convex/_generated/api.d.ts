@@ -19,6 +19,8 @@ import type * as demo from "../demo.js";
 import type * as garbage from "../garbage.js";
 import type * as gas from "../gas.js";
 import type * as http from "../http.js";
+import type * as inAppNotifications from "../inAppNotifications.js";
+import type * as invites from "../invites.js";
 import type * as notices from "../notices.js";
 import type * as notifications from "../notifications.js";
 import type * as otp from "../otp.js";
@@ -58,6 +60,8 @@ declare const fullApi: ApiFromModules<{
   garbage: typeof garbage;
   gas: typeof gas;
   http: typeof http;
+  inAppNotifications: typeof inAppNotifications;
+  invites: typeof invites;
   notices: typeof notices;
   notifications: typeof notifications;
   otp: typeof otp;

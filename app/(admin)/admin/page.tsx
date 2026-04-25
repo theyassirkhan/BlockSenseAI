@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GlassStatCard } from "@/components/ui/glass-stat-card";
 import { PageHeader } from "@/components/ui/page-header";
 import { ScrollReveal } from "@/components/ui/scroll-reveal";
-import { Building2, AlertTriangle, TrendingUp, Activity } from "lucide-react";
+import { Building2, AlertTriangle, TrendingUp, Activity, Users } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import Link from "next/link";
 import { formatDateTime } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
@@ -39,6 +40,7 @@ export default function AdminPage() {
 
   const societies = useQuery(api.societies_internal.listAll, {});
   const allTickets = useQuery(api.adminTickets.getAll, {});
+  const allUsers = useQuery(api.users.listAll, {});
 
   if (!societies) {
     return (
@@ -56,12 +58,27 @@ export default function AdminPage() {
   const urgentTickets = openTickets.filter(t => t.priority === "urgent");
   const totalMrr = societies.reduce((s, soc) => s + (soc.mrr ?? 0), 0);
 
+  const totalUsers = allUsers?.length ?? 0;
   const kpis = [
     { label: "Total Societies", value: societies.length, sub: `${activeSocieties.length} active`, icon: Building2, color: "#A855F7" },
-    { label: "Open Tickets", value: openTickets.length, sub: urgentTickets.length > 0 ? `${urgentTickets.length} urgent` : "None urgent", icon: AlertTriangle, color: urgentTickets.length > 0 ? "#EF4444" : "#34D399" },
+    { label: "Total Users", value: totalUsers, sub: "Across all societies", icon: Users, color: "#34D399" },
     { label: "Platform MRR", value: `₹${(totalMrr / 1000).toFixed(0)}K`, sub: "Monthly recurring", icon: TrendingUp, color: "#38BDF8" },
-    { label: "Pro Societies", value: societies.filter(s => s.subscriptionPlan === "pro").length, sub: "Pro tier", icon: Activity, color: "#F59E0B" },
+    { label: "Open Tickets", value: openTickets.length, sub: urgentTickets.length > 0 ? `${urgentTickets.length} urgent` : "None urgent", icon: AlertTriangle, color: urgentTickets.length > 0 ? "#EF4444" : "#34D399" },
   ];
+
+  // Society growth chart (by month)
+  const societyGrowthChart = (() => {
+    const now = new Date();
+    const result: { month: string; count: number }[] = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime();
+      const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
+      const count = societies.filter(s => s.createdAt && s.createdAt < end).length;
+      result.push({ month: label, count });
+    }
+    return result;
+  })();
 
   return (
     <div className="space-y-6">
@@ -152,6 +169,31 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+      </ScrollReveal>
+
+      {/* Society growth chart */}
+      <ScrollReveal delay={0.12}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-sky-400" />
+              Society Growth (last 6 months)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={societyGrowthChart} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+                <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }}
+                  formatter={(v: number) => [v, "Societies"]}
+                />
+                <Bar dataKey="count" fill="#A855F7" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </ScrollReveal>
 
       {/* Recent tickets */}

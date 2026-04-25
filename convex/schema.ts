@@ -631,6 +631,45 @@ export default defineSchema(
       .index("by_society", ["societyId"])
       .index("by_staff", ["societyId", "staffId"])
       .index("by_date", ["societyId", "date"]),
+
+    invites: defineTable({
+      societyId: v.id("societies"),
+      blockId: v.optional(v.id("blocks")),
+      flatNumber: v.optional(v.string()),
+      role: v.union(
+        v.literal("resident"),
+        v.literal("guard"),
+        v.literal("staff"),
+        v.literal("admin")
+      ),
+      token: v.string(),
+      email: v.optional(v.string()),
+      createdBy: v.id("users"),
+      expiresAt: v.number(),
+      usedAt: v.optional(v.number()),
+      usedBy: v.optional(v.id("users")),
+    })
+      .index("by_token", ["token"])
+      .index("by_society", ["societyId"]),
+
+    inAppNotifications: defineTable({
+      userId: v.id("users"),
+      societyId: v.id("societies"),
+      type: v.union(
+        v.literal("notice"),
+        v.literal("visitor"),
+        v.literal("payment"),
+        v.literal("invite"),
+        v.literal("system")
+      ),
+      title: v.string(),
+      body: v.string(),
+      read: v.boolean(),
+      createdAt: v.number(),
+      linkTo: v.optional(v.string()),
+    })
+      .index("by_user", ["userId", "read"])
+      .index("by_society", ["societyId"]),
   },
   { schemaValidation: true }
 );

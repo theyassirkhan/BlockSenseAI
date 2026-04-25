@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Search, Upload, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { Building2, Search, Upload, X, CheckCircle2, AlertCircle, UserPlus, Copy, Link2 } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { toast } from "sonner";
 import Papa from "papaparse";
@@ -35,6 +35,12 @@ export default function ResidentsPage() {
 
   const blocks = useQuery(api.societies.getBlocks, societyId ? { societyId } : "skip");
   const blockMap = new Map(blocks?.map(b => [b._id, b.name]) ?? []);
+
+  const createInvite = useMutation((api as any).invites.create);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ role: "resident" as const, blockId: "", flatNumber: "", email: "" });
+  const [createdToken, setCreatedToken] = useState<string | null>(null);
+  const [inviting, setInviting] = useState(false);
 
   const filtered = (residents ?? []).filter(r => {
     if (filterRole !== "all" && r.role !== filterRole) return false;
@@ -69,6 +75,25 @@ export default function ResidentsPage() {
       },
     });
     e.target.value = "";
+  }
+
+  async function handleCreateInvite() {
+    if (!societyId) return;
+    setInviting(true);
+    try {
+      const { token } = await createInvite({
+        societyId: societyId as any,
+        blockId: inviteForm.blockId ? inviteForm.blockId as any : undefined,
+        flatNumber: inviteForm.flatNumber || undefined,
+        role: inviteForm.role,
+        email: inviteForm.email || undefined,
+      });
+      setCreatedToken(token);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to create invite");
+    } finally {
+      setInviting(false);
+    }
   }
 
   async function handleImport() {
@@ -115,11 +140,109 @@ export default function ResidentsPage() {
               {blocks?.map(b => <SelectItem key={b._id} value={b._id}>{b.name}</SelectItem>)}
             </SelectContent>
           </Select>
+          <Button size="sm" variant="outline" onClick={() => { setShowInvite(p => !p); setCreatedToken(null); }} className="h-9 border-white/10 hover:border-emerald-500/50 hover:bg-emerald-500/10">
+            <UserPlus className="h-3.5 w-3.5 mr-1.5" /> Invite
+          </Button>
           <Button size="sm" variant="outline" onClick={() => { setShowImport(p => !p); setPreview([]); setImportResult(null); }} className="h-9 border-white/10 hover:border-purple-500/50 hover:bg-purple-500/10">
             <Upload className="h-3.5 w-3.5 mr-1.5" /> CSV Import
           </Button>
         </div>
       </div>
+
+      {/* Invite panel */}
+      {showInvite && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-emerald-400" />
+                Create Invitation Link
+              </CardTitle>
+              <button onClick={() => { setShowInvite(false); setCreatedToken(null); }}>
+                <X className="h-4 w-4 text-muted-foreground hover:text-white" />
+              </button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {!createdToken ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Role</label>
+                    <Select value={inviteForm.role} onValueChange={v => setInviteForm(p => ({ ...p, role: v as any }))}>
+                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="resident">Resident</SelectItem>
+                        <SelectItem value="guard">Guard</SelectItem>
+                        <SelectItem value="staff">Staff</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Block (optional)</label>
+                    <Select value={inviteForm.blockId} onValueChange={v => setInviteForm(p => ({ ...p, blockId: v }))}>
+                      <SelectTrigger className="h-9"><SelectValue placeholder="Any block" /></SelectTrigger>
+                      <SelectContent>
+                        {blocks?.map(b => <SelectItem key={b._id} value={b._id}>{b.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Flat number (optional)</label>
+                    <Input
+                      value={inviteForm.flatNumber}
+                      onChange={e => setInviteForm(p => ({ ...p, flatNumber: e.target.value }))}
+                      placeholder="A-204"
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted-foreground">Email (optional)</label>
+                    <Input
+                      value={inviteForm.email}
+                      onChange={e => setInviteForm(p => ({ ...p, email: e.target.value }))}
+                      placeholder="resident@email.com"
+                      className="h-9"
+                      type="email"
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleCreateInvite} disabled={inviting} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                  {inviting ? "Creating…" : "Generate invite link"}
+                </Button>
+              </>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm rounded-lg px-3 py-2.5" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                  <CheckCircle2 className="h-4 w-4 text-green-400 shrink-0" />
+                  <span className="text-green-300">Invite link created — valid for 7 days</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-lg p-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <span className="flex-1 font-mono text-xs text-muted-foreground truncate">
+                    {typeof window !== "undefined" ? `${window.location.origin}/join/${createdToken}` : `/join/${createdToken}`}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const url = `${window.location.origin}/join/${createdToken}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Copied to clipboard");
+                    }}
+                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors shrink-0"
+                  >
+                    <Copy className="h-3.5 w-3.5" /> Copy
+                  </button>
+                </div>
+                <p className="text-xs text-muted-foreground">Share this link with the resident. They will be guided through onboarding with their details pre-filled.</p>
+                <Button size="sm" variant="outline" onClick={() => { setCreatedToken(null); setInviteForm({ role: "resident", blockId: "", flatNumber: "", email: "" }); }}>
+                  Create another
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* CSV Import panel */}
       {showImport && (

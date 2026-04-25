@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Settings2, ExternalLink, MessageCircle } from "lucide-react";
+import { CreditCard, Settings2, ExternalLink, MessageCircle, TrendingUp, Zap } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { toast } from "sonner";
 import { formatDateTime } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
@@ -33,6 +34,7 @@ export default function PaymentsPage() {
   const societyId = profile?.societyId;
 
   const summary = useQuery(api.payments.getSummary, societyId ? { societyId } : "skip");
+  const monthlyRevenue = useQuery((api as any).payments.getMonthlyRevenue, societyId ? { societyId } : "skip");
   const payments = useQuery(api.payments.getBySociety, societyId ? { societyId } : "skip");
   const charges = useQuery(api.payments.getMaintenanceCharges, societyId ? { societyId } : "skip");
   const setCharge = useMutation(api.payments.setMaintenanceCharge);
@@ -121,6 +123,32 @@ export default function PaymentsPage() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Revenue chart */}
+      {monthlyRevenue && monthlyRevenue.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-emerald-400" />
+              Revenue (last 6 months)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={monthlyRevenue} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="month" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
+                <Tooltip
+                  contentStyle={{ background: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, fontSize: 12 }}
+                  formatter={(v: number) => [`₹${v.toLocaleString("en-IN")}`, "Collected"]}
+                />
+                <Bar dataKey="amount" fill="#34D399" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       )}
 
       {showChargeForm && (

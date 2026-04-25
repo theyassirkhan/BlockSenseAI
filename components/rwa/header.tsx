@@ -7,6 +7,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useActiveBlock } from "@/hooks/use-active-block";
 import { BellRing, ChevronDown, LogOut, Settings, User, Menu } from "lucide-react";
+import { NotificationBell } from "@/components/ui/notification-bell";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
@@ -115,6 +116,8 @@ export function RwaHeader({ societyId, onMenuOpen }: HeaderProps) {
             <span className="absolute top-1 right-1 w-2 h-2 bg-critical rounded-full animate-pulse" aria-hidden />
           )}
         </button>
+
+        <NotificationBell />
 
         {/* User menu */}
         <div className="relative" ref={userRef}>

@@ -207,3 +207,13 @@ export const getById = internalQuery({
   args: { userId: v.id("users") },
   handler: async (ctx, args) => ctx.db.get(args.userId),
 });
+
+
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) return [];
+    return ctx.db.query("users").take(500);
+  },
+});

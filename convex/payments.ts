@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 
@@ -184,5 +184,76 @@ export const getSummary = query({
       overdueCount: overdue.length,
       collectedCount: confirmed.length,
     };
+  },
+});
+
+export const getMonthlyRevenue = query({
+  args: { societyId: v.id("societies"), months: v.optional(v.number()) },
+  handler: async (ctx, { societyId, months = 6 }) => {
+    const authId = await getAuthUserId(ctx);
+    if (!authId) throw new Error("Unauthenticated");
+    const all = await ctx.db
+      .query("payments")
+      .withIndex("by_society", q => q.eq("societyId", societyId))
+      .collect();
+    const confirmed = all.filter(p => p.status === "confirmed" && p.paidAt);
+    const result: { month: string; amount: number }[] = [];
+    const now = new Date();
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
+      const start = d.getTime();
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime();
+      const amount = confirmed
+        .filter(p => p.paidAt! >= start && p.paidAt! < end)
+        .reduce((s, p) => s + p.amount, 0);
+      result.push({ month: label, amount });
+    }
+    return result;
+  },
+});
+
+export const autoGenerateMonthly = internalMutation({
+  args: { societyId: v.id("societies") },
+  handler: async (ctx, { societyId }) => {
+    const charges = await ctx.db
+      .query("maintenanceCharges")
+      .withIndex("by_society", q => q.eq("societyId", societyId))
+      .collect();
+    if (charges.length === 0) return 0;
+    const residents = await ctx.db
+      .query("users")
+      .withIndex("by_society", q => q.eq("societyId", societyId))
+      .filter(q => q.eq(q.field("role"), "resident"))
+      .collect();
+    const now = new Date();
+    const dueDate = new Date(now.getFullYear(), now.getMonth(), charges[0].dueDay ?? 10).getTime();
+    let created = 0;
+    for (const resident of residents) {
+      const charge = charges.find(c => c.flatType === (resident.flatType ?? "standard")) ?? charges[0];
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+      const existing = await ctx.db
+        .query("payments")
+        .withIndex("by_resident", q =>
+          q.eq("societyId", societyId).eq("residentId", resident._id)
+        )
+        .filter(q => q.gte(q.field("createdAt"), startOfMonth))
+        .first();
+      if (existing) continue;
+      if (!resident.blockId) continue;
+      await ctx.db.insert("payments", {
+        societyId,
+        blockId: resident.blockId,
+        residentId: resident._id,
+        type: "monthly_maintenance",
+        description: `Maintenance — ${now.toLocaleString("default", { month: "long", year: "numeric" })}`,
+        amount: charge.monthlyAmount,
+        dueDate,
+        status: "pending",
+        createdAt: Date.now(),
+      });
+      created++;
+    }
+    return created;
   },
 });
