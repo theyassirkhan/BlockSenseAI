@@ -9,7 +9,13 @@ export const metadata: Metadata = {
   title: "BlockSense — Smart Community OS",
   description: "Smart community operating system for gated residential societies",
   manifest: "/manifest.json",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "BlockSense" },
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "BlockSense" },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-icon",
+  },
 };
 
 export const viewport: Viewport = {
